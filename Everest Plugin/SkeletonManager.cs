@@ -9,6 +9,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using System.Diagnostics;
 
 namespace Everest
 {
@@ -19,6 +20,7 @@ namespace Everest
 
         public void Awake()
         {
+            EverestPlugin.LogInfo("Skeleton Manager Initializing...");
             GenerateSkeletons().Forget();
         }
 
@@ -30,7 +32,9 @@ namespace Everest
                 PlayerLoopHelper.Initialize(ref playerLoop);
             }
 
+            EverestPlugin.LogInfo("Waiting to establish connection to room...");
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
+            EverestPlugin.LogInfo($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
 
             SkeletonData[] skeletonDatas = await GetSkeletonData();
 
@@ -43,6 +47,9 @@ namespace Everest
             {
                 EverestPlugin.LogInfo($"Received {skeletonDatas.Length} skeletons.");
             }
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             var skeletonPrefab = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
 
@@ -65,7 +72,12 @@ namespace Everest
                 {
                     bones[boneIndex].SetLocalPositionAndRotation(skeletonDatas[skeletonIndex].bone_local_positions[boneIndex], Quaternion.Euler(skeletonDatas[skeletonIndex].bone_local_rotations[boneIndex]));
                 }
+
+                if (skeletonIndex % 5 == 0) await UniTask.NextFrame();
             }
+
+            stopwatch.Stop();
+            EverestPlugin.LogInfo($"Spawned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
         }
 
         private async Task<SkeletonData[]> GetSkeletonData()
@@ -81,6 +93,8 @@ namespace Everest
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsHost()
         {
+            EverestPlugin.LogInfo("Retrieving skeleton data as host...");
+
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var serverResponse = await EverestClient.RetrieveAsync(mapId);
             SyncServerResponseIdentifier(serverResponse.identifier);
@@ -89,6 +103,8 @@ namespace Everest
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClient()
         {
+            EverestPlugin.LogInfo("Retrieving skeleton data as client...");
+
             while (string.IsNullOrEmpty(serverResponseIdentifier))
             {
                 if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(SERVER_RESPONSE_IDENTIFIER_KEY, out var identifier))
@@ -100,7 +116,7 @@ namespace Everest
                 await UniTask.Delay(50);
             }
 
-            EverestPlugin.LogInfo(serverResponseIdentifier);
+            EverestPlugin.LogInfo($"Received identifier UUID from host: {serverResponseIdentifier}");
 
             var serverResponse = await EverestClient.RetrieveAsync(serverResponseIdentifier);
 

@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using Everest.Utilities;
-using ExitGames.Client.Photon;
 using HarmonyLib;
 using Newtonsoft.Json;
-using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Everest
 {
-    [BepInPlugin("com.steven.peak.everest", "Everest", "1.0.0")]
+    [BepInPlugin("com.steven.peak.everest", "Everest", "0.1.0")]
     public class EverestPlugin : BaseUnityPlugin
     {
         public static EverestPlugin Instance;
@@ -33,6 +30,8 @@ namespace Everest
             };
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
+
+            LogInfo("Everest Initialized");
         }
 
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)

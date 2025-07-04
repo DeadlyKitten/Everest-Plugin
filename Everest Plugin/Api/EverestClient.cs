@@ -13,7 +13,7 @@ namespace Everest.Api
         {
             var response = await SubmitAsync(request, request.map_id);
 
-            EverestPlugin.LogInfo(response.message);
+            if (response.message != null) EverestPlugin.LogInfo(response.message);
         }
 
         public static async UniTask<SubmissionResponse> SubmitAsync(SubmissionRequest request, int mapId)
@@ -66,6 +66,14 @@ namespace Everest.Api
                 EverestPlugin.LogError(unityWebRequest.error);
                 return default;
             }
+
+            if (unityWebRequest.responseCode != 200)
+            {
+                EverestPlugin.LogError($"Server responded with status code {unityWebRequest.responseCode}");
+                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(downloadHandler.text).error);
+                return default;
+            }
+
             return JsonConvert.DeserializeObject<T>(downloadHandler.text);
         }
     }
