@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Everest.Api
@@ -13,7 +14,11 @@ namespace Everest.Api
         {
             var response = await SubmitAsync(request, request.map_id);
 
-            if (response.message != null) EverestPlugin.LogInfo(response.message);
+            if (response.message != null)
+            {
+                UIHandler.Instance.Toast(response.message, Color.green, 2f, 2f);
+                EverestPlugin.LogInfo(response.message);
+            }
         }
 
         public static async UniTask<SubmissionResponse> SubmitAsync(SubmissionRequest request, int mapId)
@@ -41,7 +46,9 @@ namespace Everest.Api
         {
             using var downloadHandler = new DownloadHandlerBuffer();
             using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "GET", downloadHandler, null);
-            await unityWebRequest.SendWebRequest();
+
+            _ = unityWebRequest.SendWebRequest();
+            await UniTask.WaitUntil(() => unityWebRequest.isDone);
 
             if (unityWebRequest.result != UnityWebRequest.Result.Success)
             {
@@ -59,18 +66,21 @@ namespace Everest.Api
             using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "POST", downloadHandler, uploadHandler);
 
             uploadHandler.contentType = "application/json";
-            await unityWebRequest.SendWebRequest();
 
-            if (unityWebRequest.result != UnityWebRequest.Result.Success)
-            {
-                EverestPlugin.LogError(unityWebRequest.error);
-                return default;
-            }
+            _ = unityWebRequest.SendWebRequest();
+            await UniTask.WaitUntil(() => unityWebRequest.isDone);
 
             if (unityWebRequest.responseCode != 200)
             {
                 EverestPlugin.LogError($"Server responded with status code {unityWebRequest.responseCode}");
                 EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(downloadHandler.text).error);
+
+                if (unityWebRequest.responseCode == 429)
+                {
+                    var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
+                    UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
+                }
+
                 return default;
             }
 

@@ -41,6 +41,7 @@ namespace Everest
             if (skeletonDatas == null || skeletonDatas.Length == 0)
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
+                UIHandler.Instance.Toast("No skeletons :(", Color.yellow, 5f, 3f);
                 return;
             }
             else
@@ -78,6 +79,7 @@ namespace Everest
 
             stopwatch.Stop();
             EverestPlugin.LogInfo($"Spawned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
+            UIHandler.Instance.Toast("Skeletons spawned successfully!", Color.green, 5f, 5f);
         }
 
         private async Task<SkeletonData[]> GetSkeletonData()

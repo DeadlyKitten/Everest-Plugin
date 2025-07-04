@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
+using Cysharp.Threading.Tasks;
 using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.LowLevel;
 using UnityEngine.SceneManagement;
 
 namespace Everest
@@ -29,7 +31,15 @@ namespace Everest
                 Converters = new List<JsonConverter> { new Vector3Converter() }
             };
 
+            if (!PlayerLoopHelper.IsInjectedUniTaskPlayerLoop())
+            {
+                var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
+                PlayerLoopHelper.Initialize(ref playerLoop);
+            }
+
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
+
+            new GameObject("Everest UI Manager").AddComponent<UIHandler>();
 
             LogInfo("Everest Initialized");
         }
@@ -38,10 +48,11 @@ namespace Everest
         {
             LogInfo(newScene.name);
 
+            if (newScene.name.ToLower() == "title") 
+                UIHandler.Instance.Toast("Welcome to Everest!", Color.white, 7f, 3f);
+
             if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
-            {
                 new GameObject("SkeletonManager").AddComponent<SkeletonManager>();
-            }
         }
 
         #region logging
