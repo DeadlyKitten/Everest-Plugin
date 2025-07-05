@@ -25,7 +25,7 @@ namespace Everest
             config = new ConfigFile(Path.Combine(Paths.ConfigPath, "Everest.cfg"), true);
 
             enabled = config.Bind("General", "Enabled", true, "Enable or disable the Everest plugin.");
-            numSkeletons = config.Bind("General", "NumSkeletons", 100, "Number of skeletons to spawn.");
+            numSkeletons = config.Bind("General", "MaxSkeletons", 100, "Number of skeletons to spawn.");
             allowUploads = config.Bind("General", "AllowUploads", true, "Allow uploading your own skeletons.");
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
 
