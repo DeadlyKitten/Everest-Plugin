@@ -18,10 +18,36 @@ namespace Everest
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string serverResponseIdentifier;
 
+        private static GameObject skeletonPrefab;
+
         public void Awake()
         {
-            EverestPlugin.LogInfo("Skeleton Manager Initializing...");
+            if (ConfigHandler.NumSkeletons <= 0)
+            {
+                EverestPlugin.LogInfo("Number of skeletons is set to 0 in the configuration. Exiting...");
+                return;
+            }
+
+            if (skeletonPrefab == null)
+            {
+                EverestPlugin.LogDebug("Skeleton prefab not set. Not spawning skeletons.");
+                return;
+            }
+
+            EverestPlugin.LogDebug("Skeleton Manager Initializing...");
             GenerateSkeletons().Forget();
+        }
+
+        public static async UniTaskVoid LoadSkeletonPrefab()
+        {
+            skeletonPrefab = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
+
+            if (skeletonPrefab == null)
+            {
+                EverestPlugin.LogError("Skeleton prefab not found in Resources.");
+                UIHandler.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
+            }
+            
         }
 
         private async UniTaskVoid GenerateSkeletons()
@@ -32,9 +58,9 @@ namespace Everest
                 PlayerLoopHelper.Initialize(ref playerLoop);
             }
 
-            EverestPlugin.LogInfo("Waiting to establish connection to room...");
+            EverestPlugin.LogDebug("Waiting to establish connection to room...");
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
-            EverestPlugin.LogInfo($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
+            EverestPlugin.LogDebug($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
 
             SkeletonData[] skeletonDatas = await GetSkeletonData();
 
@@ -46,24 +72,17 @@ namespace Everest
             }
             else
             {
-                EverestPlugin.LogInfo($"Received {skeletonDatas.Length} skeletons.");
+                EverestPlugin.LogDebug($"Received {skeletonDatas.Length} skeletons.");
             }
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var skeletonPrefab = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
+            EverestPlugin.LogDebug("Instantiating skeletons...");
+            var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.NumSkeletons, skeletonDatas.Length);
+            var skeletons = await InstantiateAsync(skeletonPrefab, numberOfSkeletonsToSpawn, Vector3.zero, Quaternion.identity);
 
-            if (skeletonPrefab == null)
-            {
-                EverestPlugin.LogError("Skeleton prefab not found in Resources.");
-                return;
-            }
-
-            EverestPlugin.LogInfo("Instantiating skeletons...");
-            var skeletons = await InstantiateAsync(skeletonPrefab, skeletonDatas.Length);
-
-            for (int skeletonIndex = 0; skeletonIndex < skeletonDatas.Length; skeletonIndex++)
+            for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletonsToSpawn; skeletonIndex++)
             {
                 var skeleton = skeletons[skeletonIndex];
                 skeleton.transform.SetPositionAndRotation(skeletonDatas[skeletonIndex].global_position, Quaternion.Euler(skeletonDatas[skeletonIndex].global_rotation));
@@ -78,8 +97,8 @@ namespace Everest
             }
 
             stopwatch.Stop();
-            EverestPlugin.LogInfo($"Spawned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
-            UIHandler.Instance.Toast("Skeletons spawned successfully!", Color.green, 5f, 5f);
+            EverestPlugin.LogDebug($"Spawned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
+            UIHandler.Instance.Toast($"Skeletons spawned successfully! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 5f);
         }
 
         private async Task<SkeletonData[]> GetSkeletonData()
@@ -95,7 +114,7 @@ namespace Everest
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsHost()
         {
-            EverestPlugin.LogInfo("Retrieving skeleton data as host...");
+            EverestPlugin.LogDebug("Retrieving skeleton data as host...");
 
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var serverResponse = await EverestClient.RetrieveAsync(mapId);
@@ -105,7 +124,7 @@ namespace Everest
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClient()
         {
-            EverestPlugin.LogInfo("Retrieving skeleton data as client...");
+            EverestPlugin.LogDebug("Retrieving skeleton data as client...");
 
             while (string.IsNullOrEmpty(serverResponseIdentifier))
             {
@@ -114,22 +133,19 @@ namespace Everest
                     serverResponseIdentifier = identifier as string;
                 }
 
-                EverestPlugin.LogInfo("Waiting...");
                 await UniTask.Delay(50);
             }
 
-            EverestPlugin.LogInfo($"Received identifier UUID from host: {serverResponseIdentifier}");
+            EverestPlugin.LogDebug($"Received identifier UUID from host: {serverResponseIdentifier}");
 
             var serverResponse = await EverestClient.RetrieveAsync(serverResponseIdentifier);
-
-            EverestPlugin.LogInfo(serverResponse.identifier);
 
             return serverResponse.data;
         }
 
         private void SyncServerResponseIdentifier(string identifier)
         {
-            EverestPlugin.LogInfo($"Syncing server response identifier: {identifier}");
+            EverestPlugin.LogDebug($"Syncing server response identifier: {identifier}");
             this.serverResponseIdentifier = identifier;
 
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable

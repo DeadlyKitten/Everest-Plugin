@@ -24,11 +24,12 @@ namespace Everest
 
         private void Start()
         {
-            EverestPlugin.LogInfo("Initializing UI...");
+            EverestPlugin.LogDebug("Initializing UI...");
 
             var canvas = new GameObject("canvas").AddComponent<Canvas>();
             canvas.transform.SetParent(transform);
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = short.MaxValue; // Ensure it's on top of other UI elements
             canvas.gameObject.AddComponent<CanvasScaler>();
 
             var textGO = new GameObject("text");
@@ -46,7 +47,7 @@ namespace Everest
             textMesh.fontSizeMin = 26;
             textMesh.fontSizeMax = 26;
 
-            EverestPlugin.LogInfo("UI Initialized!");
+            EverestPlugin.LogDebug("UI Initialized!");
 
             FindFontEventually().Forget();
         }

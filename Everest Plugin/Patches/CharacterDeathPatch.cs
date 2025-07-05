@@ -13,7 +13,7 @@ namespace Everest.Patches
     {
         private static void Postfix(Character __instance)
         {
-            if (!__instance == Character.localCharacter) return;
+            if (__instance != Character.localCharacter) return;
 
             var steamId = SteamUser.GetSteamID().ToString();
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;

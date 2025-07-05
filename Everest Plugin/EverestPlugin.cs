@@ -23,8 +23,20 @@ namespace Everest
         {
             Instance = this;
 
-            var harmony = new Harmony("com.steven.peak.everest");
-            harmony.PatchAll();
+            ConfigHandler.Initialize();
+
+            if (!ConfigHandler.Enabled)
+            {
+                LogInfo("Everest is disabled in the configuration. Exiting...");
+                return;
+            }
+
+            if (ConfigHandler.AllowUploads)
+            {
+                var harmony = new Harmony("com.steven.peak.everest");
+                harmony.PatchAll();
+            }
+            else LogInfo("Uploads are disabled in the configuration. Patching skipped.");
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
@@ -39,7 +51,9 @@ namespace Everest
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
 
-            new GameObject("Everest UI Manager").AddComponent<UIHandler>();
+            if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<UIHandler>();
+
+            SkeletonManager.LoadSkeletonPrefab().Forget();
 
             LogInfo("Everest Initialized");
         }

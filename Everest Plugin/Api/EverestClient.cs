@@ -17,7 +17,7 @@ namespace Everest.Api
             if (response.message != null)
             {
                 UIHandler.Instance.Toast(response.message, Color.green, 2f, 2f);
-                EverestPlugin.LogInfo(response.message);
+                EverestPlugin.LogDebug(response.message);
             }
         }
 
@@ -32,7 +32,7 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
         {
-            var endpoint = $"/get_data?map_id={mapId}";
+            var endpoint = $"/get_data?map_id={mapId}&limit={ConfigHandler.NumSkeletons}";
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 
