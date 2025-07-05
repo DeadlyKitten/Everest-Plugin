@@ -1,0 +1,10 @@
+{
+    "name": "Everest",
+    "version_number": "0.1.0",
+    "website_url": "https://github.com/DeadlyKitten/Everest-Plugin",
+    "description": "Everest saves your death location and populates your world with skeletons where others have fallen. This mod creates a shared experience, potentially marking dangerous areas and connecting you to other adventurers in death.",
+    "dependencies": [
+        "BepInEx-BepInExPack_PEAK-5.4.2403",
+        "Cysharp-UniTask-2.5.0"
+    ]
+}
