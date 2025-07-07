@@ -32,7 +32,7 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
         {
-            var endpoint = $"/get_data?map_id={mapId}&limit={ConfigHandler.NumSkeletons}";
+            var endpoint = $"/get_data?map_id={mapId}&limit={ConfigHandler.MaxSkeletons}";
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 

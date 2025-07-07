@@ -22,7 +22,7 @@ namespace Everest
 
         public void Awake()
         {
-            if (ConfigHandler.NumSkeletons <= 0)
+            if (ConfigHandler.MaxSkeletons <= 0)
             {
                 EverestPlugin.LogInfo("Number of skeletons is set to 0 in the configuration. Exiting...");
                 return;
@@ -79,8 +79,8 @@ namespace Everest
             stopwatch.Start();
 
             EverestPlugin.LogDebug("Instantiating skeletons...");
-            var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.NumSkeletons, skeletonDatas.Length);
-            var skeletons = await InstantiateAsync(skeletonPrefab, numberOfSkeletonsToSpawn, Vector3.zero, Quaternion.identity);
+            var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.MaxSkeletons, skeletonDatas.Length);
+            var skeletons = await InstantiateAsync(skeletonPrefab, numberOfSkeletonsToSpawn, transform, Vector3.zero, Quaternion.identity);
 
             for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletonsToSpawn; skeletonIndex++)
             {

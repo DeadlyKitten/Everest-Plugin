@@ -5,6 +5,8 @@
     <RootNamespace>Everest</RootNamespace>
     <AssemblyName>Everest</AssemblyName>
     <LangVersion>8</LangVersion>
+    <Version>0.1.1</Version>
+    <Authors>Steven 🎀</Authors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +42,7 @@
       <HintPath>$(GameDir)\BepInEx\core\UniTask.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.dll</HintPath>
@@ -52,10 +54,10 @@
       <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
       <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>

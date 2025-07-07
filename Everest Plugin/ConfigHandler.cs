@@ -15,7 +15,7 @@ namespace Everest
         private static ConfigEntry<bool> showToasts;
 
         public static bool Enabled => enabled.Value;
-        public static int NumSkeletons => Math.Clamp(numSkeletons.Value, 0, 500);
+        public static int MaxSkeletons => Math.Clamp(numSkeletons.Value, 0, 500);
         public static bool AllowUploads => allowUploads.Value;
         public static bool ShowToasts => showToasts.Value;
 
@@ -31,7 +31,7 @@ namespace Everest
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
             EverestPlugin.LogInfo($"enabled: {Enabled}");
-            EverestPlugin.LogInfo(message: $"numSkeletons: {NumSkeletons}");
+            EverestPlugin.LogInfo(message: $"numSkeletons: {MaxSkeletons}");
             EverestPlugin.LogInfo($"allowUploads: {AllowUploads}");
             EverestPlugin.LogInfo($"showToasts: {ShowToasts}");
 
