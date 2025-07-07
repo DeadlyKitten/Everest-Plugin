@@ -59,6 +59,8 @@ Here are the available options:
     * **Values**: `true` / `false`
     * **Default**: `true`
 
+---
+
 ## 🔧 For Developers
 
 Clone the project, then create a file in the root of the project directory named:
