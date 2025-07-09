@@ -58,3 +58,26 @@ Here are the available options:
     * Enables or disables the small UI popups that notify you of mod activity (e.g., "Your death has been recorded" or "Skeletons have been summoned").
     * **Values**: `true` / `false`
     * **Default**: `true`
+
+---
+
+## 🔧 For Developers
+
+Clone the project, then create a file in the root of the project directory named:
+
+`Everest Plugin.csproj.user`
+
+Here you need to set the `GameDir` property to match your install directory.
+
+Example:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Set "YOUR OWN" game folder here to resolve most of the dependency paths! -->
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\PEAK</GameDir>
+  </PropertyGroup>
+</Project>
+```
+
+Now when you build the mod, it should resolve your references automatically, and the build event will copy the plugin into your `BepInEx\plugins` folder!
