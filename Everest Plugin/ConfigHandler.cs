@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Numerics;
 using BepInEx;
 using BepInEx.Configuration;
 
@@ -15,7 +16,7 @@ namespace Everest
         private static ConfigEntry<bool> showToasts;
 
         public static bool Enabled => enabled.Value;
-        public static int MaxSkeletons => Math.Clamp(numSkeletons.Value, 0, 500);
+        public static int MaxSkeletons => numSkeletons.Value;
         public static bool AllowUploads => allowUploads.Value;
         public static bool ShowToasts => showToasts.Value;
 
