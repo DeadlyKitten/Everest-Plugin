@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using Cysharp.Threading.Tasks;
+using Everest.Accessories;
 using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;
@@ -54,6 +55,8 @@ namespace Everest
             if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<UIHandler>();
 
             SkeletonManager.LoadSkeletonPrefab().Forget();
+
+            AssetBundleManager.Initialize().Forget();
 
             LogInfo("Everest Initialized");
         }

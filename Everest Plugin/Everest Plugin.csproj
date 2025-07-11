@@ -9,6 +9,14 @@
     <Authors>Steven 🎀</Authors>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants);PLUGIN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants);PLUGIN</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="Everest Plugin.csproj.user" />
   </ItemGroup>
@@ -71,6 +79,10 @@
     <Reference Include="Zorro.Core.Runtime">
       <HintPath>$(GameDir)\PEAK_Data\Managed\Zorro.Core.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\accessories.bundle" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

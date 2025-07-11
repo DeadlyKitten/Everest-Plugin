@@ -10,6 +10,8 @@ using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.LowLevel;
 using System.Diagnostics;
+using Everest.Accessories;
+using Zorro.Core;
 
 namespace Everest
 {
@@ -82,6 +84,8 @@ namespace Everest
             var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.MaxSkeletons, skeletonDatas.Length);
             var skeletons = await InstantiateAsync(skeletonPrefab, numberOfSkeletonsToSpawn, transform, Vector3.zero, Quaternion.identity);
 
+            EverestPlugin.LogDebug($"Instantiated {numberOfSkeletonsToSpawn} in {stopwatch.ElapsedMilliseconds} ms");
+
             for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletonsToSpawn; skeletonIndex++)
             {
                 var skeleton = skeletons[skeletonIndex];
@@ -93,11 +97,25 @@ namespace Everest
                     bones[boneIndex].SetLocalPositionAndRotation(skeletonDatas[skeletonIndex].bone_local_positions[boneIndex], Quaternion.Euler(skeletonDatas[skeletonIndex].bone_local_rotations[boneIndex]));
                 }
 
-                if (skeletonIndex % 5 == 0) await UniTask.NextFrame();
+                var steamId = skeletonDatas[skeletonIndex].steam_id;
+
+                if (!string.IsNullOrEmpty(steamId))
+                {
+                    var accessoryResult = await AssetBundleManager.TryGetAccessoryForSteamId(steamId);
+                    if (accessoryResult.success)
+                    {
+                        var accessory = accessoryResult.accessory;
+                        accessory.transform.SetParent(skeleton.transform.FindChildRecursive(accessory.bone));
+                        accessory.transform.SetLocalPositionAndRotation(accessory.localPosition, accessory.localRotation);
+                        accessory.transform.localScale = Vector3.one;
+                    }
+                }
+
+                // if (skeletonIndex % 5 == 0) await UniTask.NextFrame();
             }
 
             stopwatch.Stop();
-            EverestPlugin.LogDebug($"Spawned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
+            EverestPlugin.LogDebug($"Summoned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
             UIHandler.Instance.Toast($"Skeletons spawned successfully! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 5f);
         }
 

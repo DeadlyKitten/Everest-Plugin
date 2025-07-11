@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Everest Plugin", "Everest Plugin\Everest Plugin.csproj", "{869C1340-2294-46D4-B4CB-6D68B44C7FB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Everest Editor", "Everest Editor\Everest Editor.csproj", "{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{869C1340-2294-46D4-B4CB-6D68B44C7FB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{869C1340-2294-46D4-B4CB-6D68B44C7FB7}.Release|x64.ActiveCfg = Release|x64
 		{869C1340-2294-46D4-B4CB-6D68B44C7FB7}.Release|x64.Build.0 = Release|x64
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Debug|x64.Build.0 = Debug|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Release|x64.ActiveCfg = Release|Any CPU
+		{C51D5224-FB3A-4F69-8BB2-66521A7EA0C5}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
