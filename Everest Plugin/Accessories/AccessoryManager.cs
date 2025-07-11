@@ -8,7 +8,7 @@ using GameObject = UnityEngine.GameObject;
 
 namespace Everest.Accessories
 {
-    public class AssetBundleManager
+    public class AccessoryManager
     {
         private static Dictionary<string, SkeletonAccessory> _accessories = new Dictionary<string, SkeletonAccessory>();
 

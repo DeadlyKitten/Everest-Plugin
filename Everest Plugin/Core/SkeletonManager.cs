@@ -113,7 +113,7 @@ namespace Everest.Core
         {
             if (string.IsNullOrEmpty(steamId)) return;
 
-            var accessoryResult = await AssetBundleManager.TryGetAccessoryForSteamId(steamId);
+            var accessoryResult = await AccessoryManager.TryGetAccessoryForSteamId(steamId);
             if (accessoryResult.success)
             {
                 var accessory = accessoryResult.accessory;

@@ -57,7 +57,7 @@ namespace Everest
 
             SkeletonManager.LoadSkeletonPrefab().Forget();
 
-            AssetBundleManager.Initialize().Forget();
+            AccessoryManager.Initialize().Forget();
 
             LogInfo("Everest Initialized");
         }
