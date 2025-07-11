@@ -13,7 +13,7 @@ using System.Diagnostics;
 using Everest.Accessories;
 using Zorro.Core;
 
-namespace Everest
+namespace Everest.Core
 {
     public class SkeletonManager : MonoBehaviourPun
     {
@@ -49,7 +49,7 @@ namespace Everest
                 EverestPlugin.LogError("Skeleton prefab not found in Resources.");
                 UIHandler.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
             }
-            
+
         }
 
         private async UniTaskVoid GenerateSkeletons()
@@ -164,7 +164,7 @@ namespace Everest
         private void SyncServerResponseIdentifier(string identifier)
         {
             EverestPlugin.LogDebug($"Syncing server response identifier: {identifier}");
-            this.serverResponseIdentifier = identifier;
+            serverResponseIdentifier = identifier;
 
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
             {

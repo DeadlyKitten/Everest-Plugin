@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Logging;
 using Cysharp.Threading.Tasks;
 using Everest.Accessories;
+using Everest.Core;
 using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;

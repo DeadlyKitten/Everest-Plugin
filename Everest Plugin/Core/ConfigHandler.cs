@@ -4,7 +4,7 @@ using System.Numerics;
 using BepInEx;
 using BepInEx.Configuration;
 
-namespace Everest
+namespace Everest.Core
 {
     public static class ConfigHandler
     {
