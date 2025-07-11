@@ -15,6 +15,7 @@ namespace Everest.Core
 {
     public class SkeletonManager : MonoBehaviourPun
     {
+        private const int MAX_ATTEMPTS_FOR_UUID = 20;
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string serverResponseIdentifier;
 
@@ -136,14 +137,23 @@ namespace Everest.Core
         {
             EverestPlugin.LogDebug("Retrieving skeleton data as client...");
 
-            while (string.IsNullOrEmpty(serverResponseIdentifier))
+            var attempts = 0;
+
+            while (attempts++ < MAX_ATTEMPTS_FOR_UUID)
             {
                 if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(SERVER_RESPONSE_IDENTIFIER_KEY, out var identifier))
                 {
                     serverResponseIdentifier = identifier as string;
+                    break;
                 }
 
                 await UniTask.Delay(50);
+            }
+
+            if (string.IsNullOrEmpty(serverResponseIdentifier))
+            {
+                EverestPlugin.LogWarning("Failed to retrieve server response identifier from host after multiple attempts.");
+                return await RetrieveSkeletonDatasAsHost();
             }
 
             EverestPlugin.LogDebug($"Received identifier UUID from host: {serverResponseIdentifier}");
