@@ -62,54 +62,65 @@ namespace Everest.Core
             if (skeletonDatas == null || skeletonDatas.Length == 0)
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
-                UIHandler.Instance.Toast("No skeletons :(", Color.yellow, 5f, 3f);
+                UIHandler.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
                 return;
             }
-            else
-            {
-                EverestPlugin.LogDebug($"Received {skeletonDatas.Length} skeletons.");
-            }
+            EverestPlugin.LogDebug($"Received {skeletonDatas.Length} skeletons.");
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            var skeletons = await InstantiateSkeletons(skeletonDatas.Length, stopwatch);
+            var numberOfSkeletons = skeletons.Length;
+
+            for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletons; skeletonIndex++)
+            {
+                var skeleton = skeletons[skeletonIndex];
+                await PrepareSkeleton(skeletonDatas[skeletonIndex], skeleton);
+            }
+
+            stopwatch.Stop();
+            EverestPlugin.LogDebug($"Summoned {numberOfSkeletons} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
+            UIHandler.Instance.Toast($"Skeletons spawned successfully! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 5f);
+        }
+
+        private async UniTask<GameObject[]> InstantiateSkeletons(int skeletonDatasCount, Stopwatch stopwatch)
+        {
             EverestPlugin.LogDebug("Instantiating skeletons...");
-            var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.MaxSkeletons, skeletonDatas.Length);
+            var numberOfSkeletonsToSpawn = Math.Min(ConfigHandler.MaxSkeletons, skeletonDatasCount);
             var skeletons = await InstantiateAsync(skeletonPrefab, numberOfSkeletonsToSpawn, transform, Vector3.zero, Quaternion.identity);
 
             EverestPlugin.LogDebug($"Instantiated {numberOfSkeletonsToSpawn} in {stopwatch.ElapsedMilliseconds} ms");
 
-            for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletonsToSpawn; skeletonIndex++)
+            return skeletons;
+        }
+
+        private static async UniTask PrepareSkeleton(SkeletonData skeletonData, GameObject skeleton)
+        {
+            skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
+
+            var bones = skeleton.transform.GetComponentsInChildren<Transform>().Where(x => Enum.GetNames(typeof(SkeletonBodypart)).Contains(x.name)).ToList();
+            for (int boneIndex = 0; boneIndex < 18; boneIndex++)
             {
-                var skeleton = skeletons[skeletonIndex];
-                skeleton.transform.SetPositionAndRotation(skeletonDatas[skeletonIndex].global_position, Quaternion.Euler(skeletonDatas[skeletonIndex].global_rotation));
-
-                var bones = skeleton.transform.GetComponentsInChildren<Transform>().Where(x => Enum.GetNames(typeof(SkeletonBodypart)).Contains(x.name)).ToList();
-                for (int boneIndex = 0; boneIndex < 18; boneIndex++)
-                {
-                    bones[boneIndex].SetLocalPositionAndRotation(skeletonDatas[skeletonIndex].bone_local_positions[boneIndex], Quaternion.Euler(skeletonDatas[skeletonIndex].bone_local_rotations[boneIndex]));
-                }
-
-                var steamId = skeletonDatas[skeletonIndex].steam_id;
-
-                if (!string.IsNullOrEmpty(steamId))
-                {
-                    var accessoryResult = await AssetBundleManager.TryGetAccessoryForSteamId(steamId);
-                    if (accessoryResult.success)
-                    {
-                        var accessory = accessoryResult.accessory;
-                        accessory.transform.SetParent(skeleton.transform.FindChildRecursive(accessory.bone));
-                        accessory.transform.SetLocalPositionAndRotation(accessory.localPosition, accessory.localRotation);
-                        accessory.transform.localScale = Vector3.one;
-                    }
-                }
-
-                // if (skeletonIndex % 5 == 0) await UniTask.NextFrame();
+                bones[boneIndex].SetLocalPositionAndRotation(skeletonData.bone_local_positions[boneIndex], Quaternion.Euler(skeletonData.bone_local_rotations[boneIndex]));
             }
 
-            stopwatch.Stop();
-            EverestPlugin.LogDebug($"Summoned {skeletonDatas.Length} skeletons in {stopwatch.ElapsedMilliseconds} ms.");
-            UIHandler.Instance.Toast($"Skeletons spawned successfully! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 5f);
+            var steamId = skeletonData.steam_id;
+            await TryAddAccessory(skeleton, steamId);
+        }
+
+        private static async UniTask TryAddAccessory(GameObject skeleton, string steamId)
+        {
+            if (string.IsNullOrEmpty(steamId)) return;
+
+            var accessoryResult = await AssetBundleManager.TryGetAccessoryForSteamId(steamId);
+            if (accessoryResult.success)
+            {
+                var accessory = accessoryResult.accessory;
+                accessory.transform.SetParent(skeleton.transform.FindChildRecursive(accessory.bone));
+                accessory.transform.SetLocalPositionAndRotation(accessory.localPosition, accessory.localRotation);
+                accessory.transform.localScale = Vector3.one;
+            }
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonData()
