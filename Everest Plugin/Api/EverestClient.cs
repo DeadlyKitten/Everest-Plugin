@@ -57,7 +57,7 @@ namespace Everest.Api
                 return default;
             }
 
-            return JsonConvert.DeserializeObject<T>(downloadHandler.text);
+            return await UniTask.RunOnThreadPool(() => JsonConvert.DeserializeObject<T>(downloadHandler.text));
         }
 
         private static async UniTask<T> UnityPostRequest<T>(string requestPayload, string endpoint)
