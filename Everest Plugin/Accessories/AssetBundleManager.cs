@@ -21,7 +21,7 @@ namespace Everest.Accessories
 
             if (stream == null)
             {
-                EverestPlugin.LogWarning("Accessories AssetBundle not found in resources.");
+                EverestPlugin.LogError("Accessories AssetBundle not found in resources.");
                 return;
             }
 
@@ -35,7 +35,7 @@ namespace Everest.Accessories
 
                 if (!accessory)
                 {
-                    EverestPlugin.LogWarning($"Accessory component not found on {accessoryGO.name}");
+                    EverestPlugin.LogError($"Accessory component not found on {accessoryGO.name}");
                     continue;
                 }
 
@@ -57,7 +57,7 @@ namespace Everest.Accessories
                 var instance = (await UnityEngine.Object.InstantiateAsync(prefab)).FirstOrDefault();
                 if (instance == null)
                 {
-                    EverestPlugin.LogWarning($"Failed to instantiate accessory for Steam ID {steamId}. Returning default accessory.");
+                    EverestPlugin.LogError($"Failed to instantiate accessory for Steam ID {steamId}.");
                     return (false, null);
                 }
                 EverestPlugin.LogDebug($"Successfully instantiated accessory for Steam ID {steamId}.");
