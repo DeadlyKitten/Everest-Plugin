@@ -54,12 +54,6 @@ namespace Everest.Core
 
         private async UniTaskVoid GenerateSkeletons()
         {
-            if (!PlayerLoopHelper.IsInjectedUniTaskPlayerLoop())
-            {
-                var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
-                PlayerLoopHelper.Initialize(ref playerLoop);
-            }
-
             EverestPlugin.LogDebug("Waiting to establish connection to room...");
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
             EverestPlugin.LogDebug($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
