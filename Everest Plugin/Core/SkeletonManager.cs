@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
@@ -112,7 +111,7 @@ namespace Everest.Core
             UIHandler.Instance.Toast($"Skeletons spawned successfully! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 5f);
         }
 
-        private async Task<SkeletonData[]> GetSkeletonData()
+        private async UniTask<SkeletonData[]> GetSkeletonData()
         {
             var skeletonDatas = new SkeletonData[0];
 
