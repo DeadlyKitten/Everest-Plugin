@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\tombstone.bundle" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Everest Plugin.csproj.user" />
   </ItemGroup>
 
@@ -83,6 +87,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\accessories.bundle" />
+    <EmbeddedResource Include="Resources\tombstone.bundle" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

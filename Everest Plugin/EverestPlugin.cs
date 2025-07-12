@@ -10,6 +10,7 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 namespace Everest
@@ -58,9 +59,12 @@ namespace Everest
             SkeletonManager.LoadSkeletonPrefab().Forget();
 
             AccessoryManager.Initialize().Forget();
+            TombstoneHandler.Initialize().Forget();
 
             LogInfo("Everest Initialized");
         }
+
+
 
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
