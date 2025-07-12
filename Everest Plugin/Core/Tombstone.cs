@@ -1,12 +1,12 @@
 ﻿using TMPro;
 using UnityEngine;
 using System;
-using System.Globalization;
 
 #if PLUGIN
 using Cysharp.Threading.Tasks;
 using Everest.Api;
 using Everest.Utilities;
+using System.Globalization;
 #endif
 
 namespace Everest.Core
