@@ -50,10 +50,13 @@ namespace Everest.Core
 
         private static void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            var tombstone = GameObject.Instantiate(_tombstone, _tombstonePosition, _tombstoneRotation);
-            tombstone.name = "Everest Tombstone";
-            tombstone.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
-            tombstone.SetLayerRecursivly(20);
+            if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
+            {
+                var tombstone = GameObject.Instantiate(_tombstone, _tombstonePosition, _tombstoneRotation);
+                tombstone.name = "Everest Tombstone";
+                tombstone.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+                tombstone.SetLayerRecursivly(20);
+            }
         }
     }
 }
