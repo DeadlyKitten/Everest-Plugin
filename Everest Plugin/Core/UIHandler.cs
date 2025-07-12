@@ -86,19 +86,6 @@ namespace Everest
             }
         }
 
-        private async UniTaskVoid FindFontEventually()
-        {
-            TMP_FontAsset font = null;
-
-            while (font == null)
-            {
-                if (GUIManager.instance != null && GUIManager.instance.heroDayText != null)
-                    font = GUIManager.instance.heroDayText.font;
-                else
-                    await UniTask.Delay(100, cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
-
-            textMesh.font = font;
-        }
+        private async UniTaskVoid FindFontEventually() => textMesh.font = await FontUtility.GetFont();
     }
 }
