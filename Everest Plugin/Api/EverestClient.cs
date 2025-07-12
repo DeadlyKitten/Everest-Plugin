@@ -43,6 +43,12 @@ namespace Everest.Api
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 
+        public static async UniTask<DailyCountResponse> RetrieveCountForDay()
+        {
+            var endpoint = "/get_current_day_count";
+            return await UnityGetRequest<DailyCountResponse>(endpoint);
+        }
+
         private static async UniTask<T> UnityGetRequest<T>(string endpoint)
         {
             using var downloadHandler = new DownloadHandlerBuffer();
