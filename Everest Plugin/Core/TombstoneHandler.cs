@@ -15,8 +15,8 @@ namespace Everest.Core
 
         private static GameObject _tombstone;
 
-        private static readonly Vector3 _tombstonePosition = new Vector3(12f, 4.5f, -363f);
-        private static readonly Quaternion _tombstoneRotation = Quaternion.Euler(0f, 160f, 4f);
+        private static readonly Vector3 _tombstonePosition = new Vector3(16f, 4.1f, -363.5f);
+        private static readonly Quaternion _tombstoneRotation = Quaternion.Euler(0f, 180f, 5.5f);
 
         public static async UniTaskVoid Initialize()
         {
