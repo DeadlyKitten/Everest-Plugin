@@ -103,6 +103,16 @@ namespace Everest.Core
             for (int boneIndex = 0; boneIndex < 18; boneIndex++)
             {
                 bones[boneIndex].SetLocalPositionAndRotation(skeletonData.bone_local_positions[boneIndex], Quaternion.Euler(skeletonData.bone_local_rotations[boneIndex]));
+
+                if (boneIndex == 0)
+                {
+                    if (Vector3.Distance(bones[boneIndex].position, TombstoneHandler.TombstonePosition) < 1f)
+                    {
+                        EverestPlugin.LogWarning("Skeleton position is too close to tombstone, skipping skeleton.");
+                        skeleton.SetActive(false);
+                        return;
+                    }
+                }
             }
 
             var steamId = skeletonData.steam_id;

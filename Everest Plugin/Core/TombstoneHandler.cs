@@ -11,7 +11,12 @@ namespace Everest.Core
 {
     public class TombstoneHandler
     {
+        public static Vector3 TombstonePosition => _tombstonePosition;
+
         private static GameObject _tombstone;
+
+        private static readonly Vector3 _tombstonePosition = new Vector3(12f, 4.5f, -363f);
+        private static readonly Quaternion _tombstoneRotation = Quaternion.Euler(0f, 160f, 4f);
 
         public static async UniTaskVoid Initialize()
         {
@@ -43,9 +48,10 @@ namespace Everest.Core
             EverestPlugin.LogDebug($"TombstoneManager initialized in {stopwatch.ElapsedMilliseconds} ms.");
         }
 
-        public static void OnActiveSceneChanged(Scene oldScene, Scene newScene)
+        private static void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            var tombstone = GameObject.Instantiate(_tombstone, new Vector3(7.7f, 3f, -372f), Quaternion.Euler(0f, 96f, 350f));
+            var tombstone = GameObject.Instantiate(_tombstone, _tombstonePosition, _tombstoneRotation);
+            tombstone.name = "Everest Tombstone";
             tombstone.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
             tombstone.SetLayerRecursivly(20);
         }
