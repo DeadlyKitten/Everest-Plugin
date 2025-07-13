@@ -31,10 +31,10 @@ namespace Everest.Core
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
-            EverestPlugin.LogInfo($"enabled: {Enabled}");
-            EverestPlugin.LogInfo(message: $"maxSkeletons: {MaxSkeletons}");
-            EverestPlugin.LogInfo($"allowUploads: {AllowUploads}");
-            EverestPlugin.LogInfo($"showToasts: {ShowToasts}");
+            EverestPlugin.LogInfo($"Enabled: {Enabled}");
+            EverestPlugin.LogInfo(message: $"Max Skeletons: {MaxSkeletons}");
+            EverestPlugin.LogInfo($"Allow Uploads: {AllowUploads}");
+            EverestPlugin.LogInfo($"Show Toasts: {ShowToasts}");
 
         }
     }
