@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.dll</HintPath>
