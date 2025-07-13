@@ -32,7 +32,7 @@ namespace Everest.Core
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
             EverestPlugin.LogInfo($"enabled: {Enabled}");
-            EverestPlugin.LogInfo(message: $"numSkeletons: {MaxSkeletons}");
+            EverestPlugin.LogInfo(message: $"maxSkeletons: {MaxSkeletons}");
             EverestPlugin.LogInfo($"allowUploads: {AllowUploads}");
             EverestPlugin.LogInfo($"showToasts: {ShowToasts}");
 
