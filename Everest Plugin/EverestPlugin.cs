@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace Everest
 {
-    [BepInPlugin("com.steven.peak.everest", "Everest", "0.1.1")]
+    [BepInPlugin("com.steven.peak.everest", "Everest", "0.2.0")]
     public class EverestPlugin : BaseUnityPlugin
     {
         public static EverestPlugin Instance;
