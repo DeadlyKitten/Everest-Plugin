@@ -10,7 +10,6 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.LowLevel;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 namespace Everest

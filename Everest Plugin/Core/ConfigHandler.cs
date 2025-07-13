@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Numerics;
+﻿using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
 
