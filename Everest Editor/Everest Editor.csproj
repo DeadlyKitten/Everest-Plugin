@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Everest Plugin\Accessories\FumoAccessory.cs" Link="FumoAccessory.cs" />
     <Compile Include="..\Everest Plugin\Accessories\ShaderSwapper.cs" Link="ShaderSwapper.cs" />
     <Compile Include="..\Everest Plugin\Accessories\SkeletonAccessory.cs" Link="SkeletonAccessory.cs" />
     <Compile Include="..\Everest Plugin\Accessories\WilliamAccessory.cs" Link="WilliamAccessory.cs" />
@@ -26,6 +27,9 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(GameDir)\PEAK_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
 

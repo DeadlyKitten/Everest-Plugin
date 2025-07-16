@@ -2,7 +2,7 @@
 
 namespace Everest.Accessories
 {
-    public class WilliamAccessory : MonoBehaviour
+    public class WilliamAccessory : SkeletonAccessory
     {
         [SerializeField]
         private Material _material;
