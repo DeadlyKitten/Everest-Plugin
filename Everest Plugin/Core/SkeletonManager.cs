@@ -34,24 +34,12 @@ namespace Everest.Core
                 return;
             }
 
-            float closest = 0;
-            float furthest = 0;
-
             Vector3 camPos = cam.transform.position;
             for (int i = 0; i < skeletons.Length; i++)
             {
                 Vector3 skelPos = GetSkeletonVisualPosition(skeletons[i]);
                 float distance = Vector3.Distance(skelPos, camPos);
 
-                if (i == 0 || distance < closest)
-                {
-                    closest = distance;
-                }
-
-                if (i == 0 || distance >= furthest)
-                {
-                    furthest = distance;
-                }
                 if (distance > CULLING_DISTANCE)
                 {
                     skeletons[i].SetActive(false);
@@ -61,7 +49,6 @@ namespace Everest.Core
                     skeletons[i].SetActive(true);
                 }
             }
-            EverestPlugin.LogInfo($"Closest distance: {closest}. Furthest: {furthest}");
         }
 
         private Vector3 GetSkeletonVisualPosition(GameObject skeleton)
