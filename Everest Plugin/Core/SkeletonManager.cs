@@ -15,7 +15,7 @@ namespace Everest.Core
 {
     public class SkeletonManager : MonoBehaviourPun
     {
-        private const float CULLING_DISTANCE = 150f;
+        private readonly float CullingDistance = ConfigHandler.CullingDistance;
         private const int MAX_ATTEMPTS_FOR_UUID = 20;
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string serverResponseIdentifier;
@@ -26,27 +26,35 @@ namespace Everest.Core
 
         private GameObject[] skeletons = { };
 
+        private float cullingTimer = 0f;
+        public float cullingInterval = 1.0f;
+
         void Update()
         {
-            if (cam == null)
+            cullingTimer += Time.deltaTime;
+            if (cullingTimer < cullingInterval)
             {
-                EverestPlugin.LogWarning("No camera found, culling is not possible...");
                 return;
             }
 
+            cullingTimer = 0f;
+            PerformCulling();
+        }
+
+        private void PerformCulling()
+        {
+            float cullingDistanceSqr = CullingDistance * CullingDistance;
             Vector3 camPos = cam.transform.position;
+
             for (int i = 0; i < skeletons.Length; i++)
             {
                 Vector3 skelPos = GetSkeletonVisualPosition(skeletons[i]);
-                float distance = Vector3.Distance(skelPos, camPos);
+                float sqrDist = (skelPos - camPos).sqrMagnitude;
+                bool shouldBeActive = sqrDist <= cullingDistanceSqr;
 
-                if (distance > CULLING_DISTANCE)
+                if (skeletons[i].activeSelf != shouldBeActive)
                 {
-                    skeletons[i].SetActive(false);
-                }
-                else
-                {
-                    skeletons[i].SetActive(true);
+                    skeletons[i].SetActive(shouldBeActive);
                 }
             }
         }
