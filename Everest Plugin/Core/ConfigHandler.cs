@@ -30,7 +30,7 @@ namespace Everest.Core
             enabled = config.Bind("General", "Enabled", true, "Enable or disable the Everest plugin.");
             numSkeletons = config.Bind("General", "MaxSkeletons", 100, "Number of skeletons to spawn.");
             allowUploads = config.Bind("General", "AllowUploads", true, "Allow uploading your own skeletons.");
-            cullingDistance = config.Bind("General", "CullingDistance", 150.0f, "The distance the skeletons will render at");
+            cullingDistance = config.Bind("General", "CullingDistance", 150.0f, "The maximum distance the skeletons will render at.");
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
