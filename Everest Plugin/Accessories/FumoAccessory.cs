@@ -19,6 +19,11 @@ namespace Everest.Accessories
             }
         }
 
+        private void OnDestroy()
+        {
+            transform.parent.parent.parent.Find("MainMesh").gameObject.SetActive(true);
+        }
+
 #endif
     }
 }

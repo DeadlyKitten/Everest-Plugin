@@ -8,10 +8,26 @@ namespace Everest.Accessories
         private Material _material;
 
 #if PLUGIN
+
+        private Material _originalMaterial;
+
         private void Start()
         {
             var renderer = GetComponentInParent<SkinnedMeshRenderer>();
-            if (renderer) renderer.material = _material;
+            if (renderer)
+            {
+                _originalMaterial = renderer.material;
+                renderer.material = _material;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            var renderer = GetComponentInParent<SkinnedMeshRenderer>();
+            if (renderer && _originalMaterial)
+            {
+                renderer.material = _originalMaterial;
+            }
         }
 #endif
     }
