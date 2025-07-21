@@ -4,13 +4,12 @@ Everest is a mod for [PEAK](https://store.steampowered.com/app/3527290/PEAK/) th
 
 ![skeleton](https://github.com/user-attachments/assets/f1c7b164-2810-4e42-946a-b7a7e4f9706b)
 
-
 ## ✨ Features
 
-* **Shared Deaths:** Automatically uploads your death location to a central server.
-* **Persistent Skeletons:** Downloads the death locations of other players and spawns skeletons in their place, showing you where others have perished on their arduous climb to the top.
-* **UI Toasts:** Provides easy confirmation that the mod is working as expected and informs you when it isn't.
-* **Configurable:** A detailed configuration file lets you adjust the experience to your liking.
+- **Shared Deaths:** Automatically uploads your death location to a central server.
+- **Persistent Skeletons:** Downloads the death locations of other players and spawns skeletons in their place, showing you where others have perished on their arduous climb to the top.
+- **UI Toasts:** Provides easy confirmation that the mod is working as expected and informs you when it isn't.
+- **Configurable:** A detailed configuration file lets you adjust the experience to your liking.
 
 ---
 
@@ -18,9 +17,9 @@ Everest is a mod for [PEAK](https://store.steampowered.com/app/3527290/PEAK/) th
 
 Before installing Everest, please ensure you have the following installed:
 
-* **[BepInEx](https://github.com/BepInEx/BepInEx)**: The modding framework required to load the mod.
-* **[UniTask](https://github.com/Cysharp/UniTask)**: A library used to better handle async operations in Unity.
-  * Simply drop the UniTask dll files into `BepInEx/core` to install.
+- **[BepInEx](https://github.com/BepInEx/BepInEx)**: The modding framework required to load the mod.
+- **[UniTask](https://github.com/Cysharp/UniTask)**: A library used to better handle async operations in Unity.
+  - Simply drop the UniTask dll files into `BepInEx/core` to install.
 
 ---
 
@@ -39,25 +38,28 @@ The first time you run the game with Everest installed, it will generate a confi
 
 Here are the available options:
 
-* **`Enabled`**
-    * Toggles the entire mod on or off.
-    * **Values**: `true` / `false`
-    * **Default**: `true`
+- **`Enabled`**
 
-* **`MaxSkeletons`**
-    * Sets the maximum number of skeletons that can be spawned in your world at one time.
-    * **Values**: Any whole number (e.g., `10`, `25`, `50`)
-    * **Default**: `100`
+  - Toggles the entire mod on or off.
+  - **Values**: `true` / `false`
+  - **Default**: `true`
 
-* **`AllowUpload`**
-    * Determines if the mod will upload your own death location to the server. Set to `false` if you only want to see other players' skeletons without contributing your own.
-    * **Values**: `true` / `false`
-    * **Default**: `true`
+- **`MaxSkeletons`**
 
-* **`ShowToasts`**
-    * Enables or disables the small UI popups that notify you of mod activity (e.g., "Your death has been recorded" or "Skeletons have been summoned").
-    * **Values**: `true` / `false`
-    * **Default**: `true`
+  - Sets the maximum number of skeletons that can be spawned in your world at one time.
+  - **Values**: Any whole number (e.g., `10`, `25`, `50`)
+  - **Default**: `100`
+
+- **`AllowUpload`**
+
+  - Determines if the mod will upload your own death location to the server. Set to `false` if you only want to see other players' skeletons without contributing your own.
+  - **Values**: `true` / `false`
+  - **Default**: `true`
+
+- **`ShowToasts`**
+  - Enables or disables the small UI popups that notify you of mod activity (e.g., "Your death has been recorded" or "Skeletons have been summoned").
+  - **Values**: `true` / `false`
+  - **Default**: `true`
 
 ---
 
@@ -70,6 +72,7 @@ Clone the project, then create a file in the root of the project directory named
 Here you need to set the `GameDir` property to match your install directory.
 
 Example:
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
@@ -80,4 +83,18 @@ Example:
 </Project>
 ```
 
+Ensure you have the [.NET compiler installed](https://dotnet.microsoft.com/) (Tested with 9.0).
+
 Now when you build the mod, it should resolve your references automatically, and the build event will copy the plugin into your `BepInEx\plugins` folder!
+
+To build run
+
+```bash
+dotnet build
+```
+
+For a release build you can do
+
+```bash
+dotnet publish -c Release
+```

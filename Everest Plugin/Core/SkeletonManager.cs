@@ -15,11 +15,64 @@ namespace Everest.Core
 {
     public class SkeletonManager : MonoBehaviourPun
     {
+        private readonly float CullingDistance = ConfigHandler.CullingDistance;
         private const int MAX_ATTEMPTS_FOR_UUID = 20;
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string serverResponseIdentifier;
 
         private static GameObject skeletonPrefab;
+
+        private Camera cam;
+
+        private GameObject[] skeletons = { };
+
+        private float cullingTimer = 0f;
+        public float cullingInterval = 1.0f;
+
+        void Update()
+        {
+            cullingTimer += Time.deltaTime;
+            if (cullingTimer < cullingInterval)
+            {
+                return;
+            }
+
+            cullingTimer = 0f;
+            PerformCulling();
+        }
+
+        private void PerformCulling()
+        {
+            float cullingDistanceSqr = CullingDistance * CullingDistance;
+            Vector3 camPos = cam.transform.position;
+
+            for (int i = 0; i < skeletons.Length; i++)
+            {
+                Vector3 skelPos = GetSkeletonVisualPosition(skeletons[i]);
+                float sqrDist = (skelPos - camPos).sqrMagnitude;
+                bool shouldBeActive = sqrDist <= cullingDistanceSqr;
+
+                if (skeletons[i].activeSelf != shouldBeActive)
+                {
+                    skeletons[i].SetActive(shouldBeActive);
+                }
+            }
+        }
+
+        private Vector3 GetSkeletonVisualPosition(GameObject skeleton)
+        {
+            var renderers = skeleton.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return skeleton.transform.position;
+
+            Bounds combinedBounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                combinedBounds.Encapsulate(renderers[i].bounds);
+            }
+
+            return combinedBounds.center;
+        }
+
 
         public void Awake()
         {
@@ -34,6 +87,8 @@ namespace Everest.Core
                 EverestPlugin.LogDebug("Skeleton prefab not set. Not spawning skeletons.");
                 return;
             }
+
+            cam = Camera.main;
 
             EverestPlugin.LogDebug("Skeleton Manager Initializing...");
             GenerateSkeletons().Forget();
@@ -72,6 +127,7 @@ namespace Everest.Core
 
             var skeletons = await InstantiateSkeletons(skeletonDatas.Length, stopwatch);
             var numberOfSkeletons = skeletons.Length;
+            this.skeletons = skeletons;
 
             for (int skeletonIndex = 0; skeletonIndex < numberOfSkeletons; skeletonIndex++)
             {
@@ -115,6 +171,8 @@ namespace Everest.Core
                 }
             }
 
+            // By default set skeletons to not active
+            skeleton.SetActive(false);
             var steamId = skeletonData.steam_id;
             await TryAddAccessory(skeleton, steamId);
         }
@@ -135,8 +193,7 @@ namespace Everest.Core
 
         private async UniTask<SkeletonData[]> GetSkeletonData()
         {
-            var skeletonDatas = new SkeletonData[0];
-
+            SkeletonData[] skeletonDatas;
             if (PhotonNetwork.IsMasterClient)
                 skeletonDatas = await RetrieveSkeletonDatasAsHost();
             else
