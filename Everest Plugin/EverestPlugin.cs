@@ -19,8 +19,6 @@ namespace Everest
     {
         public static EverestPlugin Instance;
 
-        private const byte INSTANTIATION_EVENT_CODE = 172;
-
         private void Awake()
         {
             Instance = this;
