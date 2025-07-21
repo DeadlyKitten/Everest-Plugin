@@ -129,8 +129,7 @@ namespace Everest.Core
                 return;
             }
 
-            var request = AsyncGPUReadback.Request(_resultsBuffer, resultsCount * Marshal.SizeOf(typeof(DistanceCullingResult)), 0);
-            await request;
+            var request = await AsyncGPUReadback.Request(_resultsBuffer, resultsCount * Marshal.SizeOf(typeof(DistanceCullingResult)), 0);
 
             if (request.hasError)
             {
