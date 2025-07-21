@@ -27,9 +27,9 @@ namespace Everest.Core
         private static ComputeShader _distanceCheckShader;
         private int _kernelIndex;
         private ComputeBuffer _positionsBuffer;
-        private ComputeBuffer _resultIndicesBuffer;
-        private HashSet<int> _objectsInRange = new HashSet<int>();
-        private HashSet<int> _objectsInRangeLastIteration = new HashSet<int>();
+        private ComputeBuffer _resultsBuffer;
+        private HashSet<uint> _objectsInRange = new HashSet<uint>();
+        private HashSet<uint> _objectsInRangeLastIteration = new HashSet<uint>();
         private CullableSkeleton[] _skeletons;
         private IObjectPool<Skeleton> _skeletonPool;
 
@@ -104,7 +104,7 @@ namespace Everest.Core
         private void OnDestroy()
         {
             _positionsBuffer?.Release();
-            _resultIndicesBuffer?.Release();
+            _resultsBuffer?.Release();
         }
 
         private async UniTaskVoid HandleDistanceCulling()
@@ -113,13 +113,11 @@ namespace Everest.Core
 
             _distanceCheckShader.SetVector("_PlayerPosition", Camera.main.transform.position);
 
-            _resultIndicesBuffer.SetCounterValue(0);
+            _resultsBuffer.SetCounterValue(0);
 
             _distanceCheckShader.Dispatch(_kernelIndex, Mathf.CeilToInt(_totalSkeletonCount / 256f), 1, 1);
 
             var resultsCount = GetResultCount();
-
-            UIHandler.Instance.Toast($"Skeletons in range: {resultsCount}", Color.blue);
 
             if (resultsCount == 0)
             {
@@ -129,7 +127,7 @@ namespace Everest.Core
                 return;
             }
 
-            var request = AsyncGPUReadback.Request(_resultIndicesBuffer, resultsCount * sizeof(int), 0);
+            var request = AsyncGPUReadback.Request(_resultsBuffer, resultsCount * Marshal.SizeOf(typeof(DistanceCullingResult)), 0);
             await request;
 
             if (request.hasError)
@@ -139,12 +137,16 @@ namespace Everest.Core
                 return;
             }
 
-            var _resultIndices = request.GetData<int>().ToArray();
+            var _results = request.GetData<DistanceCullingResult>().ToArray();
             _objectsInRange.Clear();
 
-            for (int i = 0; i < resultsCount; i++)
+            Array.Sort(_results);
+
+            var count = Math.Min(resultsCount, ConfigHandler.MaxVisibleSkeletons);
+
+            for (int i = 0; i < count; i++)
             {
-                _objectsInRange.Add(_resultIndices[i]);
+                _objectsInRange.Add(_results[i].index);
             }
 
             await ProcessCullingResults();
@@ -163,7 +165,7 @@ namespace Everest.Core
                 _objectsInRangeLastIteration.Add(index);
             }
 
-            for (int i = 0; i < _totalSkeletonCount; i++)
+            for (uint i = 0; i < _totalSkeletonCount; i++)
             {
                 bool isInRange = _objectsInRange.Contains(i);
 
@@ -190,7 +192,7 @@ namespace Everest.Core
         private int GetResultCount()
         {
             ComputeBuffer countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-            ComputeBuffer.CopyCount(_resultIndicesBuffer, countBuffer, 0);
+            ComputeBuffer.CopyCount(_resultsBuffer, countBuffer, 0);
             int[] countArray = { 0 };
             countBuffer.GetData(countArray);
             countBuffer.Release();
@@ -202,9 +204,10 @@ namespace Everest.Core
             _kernelIndex = _distanceCheckShader.FindKernel("CSMain");
 
             _distanceCheckShader.SetFloat("_Threshold", ConfigHandler.SkeletonDrawDistance);
+            _distanceCheckShader.SetInt("_TotalPositions", _totalSkeletonCount);
 
-            _resultIndicesBuffer = new ComputeBuffer(_totalSkeletonCount, sizeof(int), ComputeBufferType.Append);
-            _distanceCheckShader.SetBuffer(_kernelIndex, "_ResultIndices", _resultIndicesBuffer);
+            _resultsBuffer = new ComputeBuffer(_totalSkeletonCount, Marshal.SizeOf(typeof(DistanceCullingResult)), ComputeBufferType.Append);
+            _distanceCheckShader.SetBuffer(_kernelIndex, "_Results", _resultsBuffer);
 
             _positionsBuffer = new ComputeBuffer(_skeletons.Length, Marshal.SizeOf(typeof(Vector3)));
             _distanceCheckShader.SetBuffer(_kernelIndex, "_Positions", _positionsBuffer);
@@ -381,6 +384,18 @@ namespace Everest.Core
             {
                 Instance = null;
                 Data = data;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct DistanceCullingResult : IComparable<DistanceCullingResult>
+        {
+            public uint index;
+            public float distance;
+
+            public int CompareTo(DistanceCullingResult other)
+            {
+                return distance.CompareTo(other.distance);
             }
         }
     }
