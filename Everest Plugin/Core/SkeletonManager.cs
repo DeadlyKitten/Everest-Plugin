@@ -26,6 +26,7 @@ namespace Everest.Core
 
         private static ComputeShader _distanceCheckShader;
         private int _kernelIndex;
+        private ComputeBuffer _countBuffer;
         private ComputeBuffer _positionsBuffer;
         private ComputeBuffer _resultsBuffer;
         private HashSet<uint> _objectsInRange = new HashSet<uint>();
@@ -65,7 +66,7 @@ namespace Everest.Core
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
             EverestPlugin.LogDebug($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
 
-            _skeletons = (await GetSkeletonData()).Select(Skeleton => new CullableSkeleton(Skeleton)).ToArray();
+            _skeletons = (await GetSkeletonDataAsync()).Select(Skeleton => new CullableSkeleton(Skeleton)).ToArray();
 
             if (_skeletons == null || _skeletons.Length == 0)
             {
@@ -98,16 +99,17 @@ namespace Everest.Core
             }
             _elapsedTime = 0;
 
-            HandleDistanceCulling().Forget();
+            HandleDistanceCullingAsync().Forget();
         }
 
         private void OnDestroy()
         {
+            _countBuffer?.Release();
             _positionsBuffer?.Release();
             _resultsBuffer?.Release();
         }
 
-        private async UniTaskVoid HandleDistanceCulling()
+        private async UniTaskVoid HandleDistanceCullingAsync()
         {
             _isCulling = true;
 
@@ -117,12 +119,12 @@ namespace Everest.Core
 
             _distanceCheckShader.Dispatch(_kernelIndex, Mathf.CeilToInt(_totalSkeletonCount / 256f), 1, 1);
 
-            var resultsCount = GetResultCount();
+            var resultsCount = await GetResultCountAsync();
 
             if (resultsCount == 0)
             {
                 _objectsInRange.Clear();
-                await ProcessCullingResults();
+                await ProcessCullingResultsAsync();
                 _isCulling = false;
                 return;
             }
@@ -149,12 +151,12 @@ namespace Everest.Core
                 _objectsInRange.Add(_results[i].index);
             }
 
-            await ProcessCullingResults();
+            await ProcessCullingResultsAsync();
 
             _isCulling = false;
         }
 
-        private async UniTask ProcessCullingResults()
+        private async UniTask ProcessCullingResultsAsync()
         {
             if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
                 return;
@@ -174,8 +176,7 @@ namespace Everest.Core
                     if (_skeletons[i].Instance == null)
                     {
                         _skeletons[i].Instance = _skeletonPool.Get();
-                        await PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
-                        _skeletons[i].Instance.gameObject.name = $"Skeleton_{i}";
+                        await PrepareSkeletonAsync(_skeletons[i].Data, _skeletons[i].Instance);
                     }
                 }
                 else
@@ -189,14 +190,18 @@ namespace Everest.Core
             }
         }
 
-        private int GetResultCount()
+        private async UniTask<int> GetResultCountAsync()
         {
-            ComputeBuffer countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-            ComputeBuffer.CopyCount(_resultsBuffer, countBuffer, 0);
-            int[] countArray = { 0 };
-            countBuffer.GetData(countArray);
-            countBuffer.Release();
-            return countArray[0];
+            ComputeBuffer.CopyCount(_resultsBuffer, _countBuffer, 0);
+            var request = await AsyncGPUReadback.Request(_countBuffer);
+
+            if (request.hasError)
+            {
+                EverestPlugin.LogError("GPU count readback error.");
+                return 0;
+            }
+
+            return request.GetData<int>()[0];
         }
 
         private void PrepareBuffers()
@@ -205,6 +210,8 @@ namespace Everest.Core
 
             _distanceCheckShader.SetFloat("_Threshold", ConfigHandler.SkeletonDrawDistance);
             _distanceCheckShader.SetInt("_TotalPositions", _totalSkeletonCount);
+
+            _countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
 
             _resultsBuffer = new ComputeBuffer(_totalSkeletonCount, Marshal.SizeOf(typeof(DistanceCullingResult)), ComputeBufferType.Append);
             _distanceCheckShader.SetBuffer(_kernelIndex, "_Results", _resultsBuffer);
@@ -221,7 +228,7 @@ namespace Everest.Core
             _positionsBuffer.SetData(positions);
         }
 
-        public static async UniTaskVoid LoadComputeShader()
+        public static async UniTaskVoid LoadComputeShaderAsync()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Everest.Resources.computeshader.bundle");
 
@@ -243,7 +250,7 @@ namespace Everest.Core
             await assetBundle.UnloadAsync(false).ToUniTask();
         }
 
-        public static async UniTaskVoid LoadSkeletonPrefab()
+        public static async UniTaskVoid LoadSkeletonPrefabAsync()
         {
             _skeletonPrefab = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
 
@@ -260,7 +267,7 @@ namespace Everest.Core
             }
         }
 
-        private async UniTask PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
+        private async UniTask PrepareSkeletonAsync(SkeletonData skeletonData, Skeleton skeleton)
         {
             skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
 
@@ -284,18 +291,18 @@ namespace Everest.Core
             await skeleton.TryAddAccessory(steamId);
         }
 
-        private async UniTask<SkeletonData[]> GetSkeletonData()
+        private async UniTask<SkeletonData[]> GetSkeletonDataAsync()
         {
             var skeletonDatas = new SkeletonData[0];
 
             if (PhotonNetwork.IsMasterClient)
-                skeletonDatas = await RetrieveSkeletonDatasAsHost();
+                skeletonDatas = await RetrieveSkeletonDatasAsHostAsync();
             else
-                skeletonDatas = await RetrieveSkeletonDatasAsClient();
+                skeletonDatas = await RetrieveSkeletonDatasAsClientAsync();
             return skeletonDatas;
         }
 
-        private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsHost()
+        private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsHostAsync()
         {
             EverestPlugin.LogDebug("Retrieving skeleton data as host...");
 
@@ -305,7 +312,7 @@ namespace Everest.Core
             return serverResponse.data;
         }
 
-        private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClient()
+        private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClientAsync()
         {
             EverestPlugin.LogDebug("Retrieving skeleton data as client...");
 
@@ -325,7 +332,7 @@ namespace Everest.Core
             if (string.IsNullOrEmpty(_serverResponseIdentifier))
             {
                 EverestPlugin.LogWarning("Failed to retrieve server response identifier from host after multiple attempts.");
-                return await RetrieveSkeletonDatasAsHost();
+                return await RetrieveSkeletonDatasAsHostAsync();
             }
 
             EverestPlugin.LogDebug($"Received identifier UUID from host: {_serverResponseIdentifier}");
