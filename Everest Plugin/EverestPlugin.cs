@@ -55,6 +55,7 @@ namespace Everest
 
             if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<UIHandler>();
 
+            SkeletonManager.LoadComputeShader().Forget();
             SkeletonManager.LoadSkeletonPrefab().Forget();
 
             AccessoryManager.Initialize().Forget();
