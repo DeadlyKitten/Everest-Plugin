@@ -19,8 +19,6 @@ namespace Everest
     {
         public static EverestPlugin Instance;
 
-        private const byte INSTANTIATION_EVENT_CODE = 172;
-
         private void Awake()
         {
             Instance = this;
@@ -55,7 +53,8 @@ namespace Everest
 
             if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<UIHandler>();
 
-            SkeletonManager.LoadSkeletonPrefab().Forget();
+            SkeletonManager.LoadComputeShaderAsync().Forget();
+            SkeletonManager.LoadSkeletonPrefabAsync().Forget();
 
             AccessoryManager.Initialize().Forget();
             TombstoneHandler.Initialize().Forget();

@@ -11,7 +11,7 @@ namespace Everest.Patches
     [HarmonyPatch(typeof(Character), nameof(Character.RPCA_Die))]
     public class CharacterDeathPatch
     {
-        private static void Postfix(Character __instance)
+        private static void Prefix(Character __instance)
         {
             if (__instance != Character.localCharacter) return;
 
