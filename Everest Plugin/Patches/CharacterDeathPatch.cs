@@ -16,6 +16,7 @@ namespace Everest.Patches
             if (__instance != Character.localCharacter) return;
 
             var steamId = SteamUser.GetSteamID().ToString();
+            var authTicket = GetAuthTicket();
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var mapSegment = (int) MapHandler.Instance.GetCurrentSegment();
 
@@ -24,7 +25,7 @@ namespace Everest.Patches
 
             var (boneLocalPositions, boneLocalRotations) = GenerateLocalTransformData(__instance);
 
-            var requestPayload = new SubmissionRequest(steamId, mapId, mapSegment, globalPosition, globalRotation, boneLocalPositions, boneLocalRotations);
+            var requestPayload = new SubmissionRequest(steamId, authTicket, mapId, mapSegment, globalPosition, globalRotation, boneLocalPositions, boneLocalRotations);
 
             EverestClient.SubmitDeath(requestPayload).Forget();
         }
@@ -39,6 +40,11 @@ namespace Everest.Patches
             var rotations = bones.Select(bone => bone.localRotation.eulerAngles).ToArray();
 
             return (positions, rotations);
+        }
+
+        private static string GetAuthTicket()
+        {
+            return SteamAuthTicketService.GetSteamAuthTicket().Item1;
         }
     }
 }

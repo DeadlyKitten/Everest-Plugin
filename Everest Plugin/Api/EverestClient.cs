@@ -9,7 +9,7 @@ namespace Everest.Api
 {
     public static class EverestClient
     {
-        private const string SERVER_BASE_URL = "https://peak-everest.com";
+        private const string SERVER_BASE_URL = "https://peak-everest.com/api/v2";
 
         public static async UniTaskVoid SubmitDeath(SubmissionRequest request)
         {
@@ -24,7 +24,7 @@ namespace Everest.Api
 
         public static async UniTask<SubmissionResponse> SubmitAsync(SubmissionRequest request, int mapId)
         {
-            var endpoint = $"/submit_data?map_id={mapId}";
+            var endpoint = $"/Skeletons/submit?map_id={mapId}";
 
             var payload = JsonConvert.SerializeObject(request, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
@@ -33,19 +33,19 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
         {
-            var endpoint = $"/get_data?map_id={mapId}&limit={ConfigHandler.MaxSkeletons}";
+            var endpoint = $"/Skeletons/recent?map_id={mapId}&limit={ConfigHandler.MaxSkeletons}";
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 
         public static async UniTask<ServerResponse> RetrieveAsync(string identifier)
         {
-            var endpoint = $"/get_data_by_identifier/{identifier}";
+            var endpoint = $"/Skeletons/recent/{identifier}";
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 
         public static async UniTask<DailyCountResponse> RetrieveCountForDay()
         {
-            var endpoint = "/get_current_day_count";
+            var endpoint = "/Stats/daily/submissions";
             return await UnityGetRequest<DailyCountResponse>(endpoint);
         }
 
