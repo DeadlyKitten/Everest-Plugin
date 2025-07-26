@@ -9,7 +9,11 @@ namespace Everest.Api
 {
     public static class EverestClient
     {
+#if DEBUG
         private const string SERVER_BASE_URL = "https://dev.peak-everest.com/api/v2";
+#else
+        private const string SERVER_BASE_URL = "https://peak-everest.com/api/v2";
+#endif
 
         public static async UniTaskVoid SubmitDeath(SubmissionRequest request)
         {
