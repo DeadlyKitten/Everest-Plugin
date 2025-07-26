@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using BepInEx;
 using BepInEx.Logging;
 using Cysharp.Threading.Tasks;
 using Everest.Accessories;
+using Everest.Api;
 using Everest.Core;
 using Everest.Utilities;
 using HarmonyLib;
@@ -62,17 +64,32 @@ namespace Everest
             LogInfo("Everest Initialized");
         }
 
-
-
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
             LogInfo(newScene.name);
 
-            if (newScene.name.ToLower() == "title") 
-                UIHandler.Instance.Toast("Welcome to Everest!", Color.white, 7f, 3f);
+            if (newScene.name.ToLower() == "airport")
+                GetServerStatus().Forget();
 
             if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
                 new GameObject("SkeletonManager").AddComponent<SkeletonManager>();
+        }
+
+        private async UniTaskVoid GetServerStatus()
+        {
+            LogWarning(Info.Metadata.Version.ToString());
+            var serverStatus = await EverestClient.RetrieveServerStatus(Info.Metadata.Version.ToString());
+
+            var message = new StringBuilder();
+            message.AppendLine($"Everest Server Status: {serverStatus?.status ?? "offline"}");
+            if (!string.IsNullOrEmpty(serverStatus.updateInfo))
+                message.AppendLine(serverStatus.updateInfo);
+            if (!string.IsNullOrEmpty(serverStatus.message))
+                message.AppendLine(serverStatus.message);
+
+            var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
+
+            UIHandler.Instance.Toast(message.ToString(), color, 7f, 3f);
         }
 
         #region logging
