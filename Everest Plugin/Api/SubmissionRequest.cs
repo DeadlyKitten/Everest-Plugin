@@ -7,6 +7,7 @@ namespace Everest.Api
     public class SubmissionRequest
     {
         public string steam_id;
+        public string auth_session_ticket;
         public int map_id;
         public int map_segment;
 
@@ -19,9 +20,10 @@ namespace Everest.Api
         public Vector3[] bone_local_positions;
         public Vector3[] bone_local_rotations;
 
-        public SubmissionRequest(string steamId, int mapId, int mapSegment, Vector3 globalPos, Vector3 globalRot, Vector3[] boneLocalPos, Vector3[] boneLocalRot)
+        public SubmissionRequest(string steamId, string authTicket, int mapId, int mapSegment, Vector3 globalPos, Vector3 globalRot, Vector3[] boneLocalPos, Vector3[] boneLocalRot)
         {
             this.steam_id = steamId;
+            this.auth_session_ticket = authTicket;
             this.map_id = mapId;
             this.map_segment = mapSegment;
             this.global_position = globalPos;

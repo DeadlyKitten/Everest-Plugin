@@ -307,6 +307,13 @@ namespace Everest.Core
 
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var serverResponse = await EverestClient.RetrieveAsync(mapId);
+
+            if (serverResponse == null || serverResponse.data == null)
+            {
+                EverestPlugin.LogWarning("No skeleton data found for this map.");
+                UIHandler.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
+                return Array.Empty<SkeletonData>();
+            }
             SyncServerResponseIdentifier(serverResponse.identifier);
             return serverResponse.data;
         }

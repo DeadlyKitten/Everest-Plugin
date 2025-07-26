@@ -1,4 +1,6 @@
-﻿namespace Everest.Api
+﻿using Newtonsoft.Json;
+
+namespace Everest.Api
 {
     public class ServerResponse
     {
