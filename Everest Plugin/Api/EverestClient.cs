@@ -9,15 +9,15 @@ namespace Everest.Api
 {
     public static class EverestClient
     {
-        private const string SERVER_BASE_URL = "https://peak-everest.com/api/v2";
+        private const string SERVER_BASE_URL = "https://dev.peak-everest.com/api/v2";
 
         public static async UniTaskVoid SubmitDeath(SubmissionRequest request)
         {
             var response = await SubmitAsync(request, request.map_id);
 
-            if (response.message != null)
+            if (response != null && response.message != null)
             {
-                UIHandler.Instance.Toast(response.message, Color.green, 2f, 2f);
+                UIHandler.Instance.Toast(response.message, Color.grey, 2f, 2f);
                 EverestPlugin.LogDebug(response.message);
             }
         }
@@ -49,7 +49,13 @@ namespace Everest.Api
             return await UnityGetRequest<DailyCountResponse>(endpoint);
         }
 
-        private static async UniTask<T> UnityGetRequest<T>(string endpoint)
+        public static async UniTask<ServerStatusResponse> RetrieveServerStatus(string version)
+        {
+            var endpoint = $"/Status?clientVersion={version}";
+            return await UnityGetRequest<ServerStatusResponse>(endpoint, false);
+        }
+
+        private static async UniTask<T> UnityGetRequest<T>(string endpoint, bool bailOnFail = true)
         {
             using var downloadHandler = new DownloadHandlerBuffer();
             using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "GET", downloadHandler, null);
@@ -60,7 +66,7 @@ namespace Everest.Api
             if (unityWebRequest.result != UnityWebRequest.Result.Success)
             {
                 EverestPlugin.LogError(unityWebRequest.error);
-                return default;
+                if (bailOnFail) return default;
             }
 
             return await UniTask.RunOnThreadPool(() => JsonConvert.DeserializeObject<T>(downloadHandler.text));
@@ -87,8 +93,6 @@ namespace Everest.Api
                     var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
                     UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
                 }
-
-                return default;
             }
 
             return JsonConvert.DeserializeObject<T>(downloadHandler.text);

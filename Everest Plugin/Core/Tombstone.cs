@@ -39,6 +39,13 @@ namespace Everest.Core
         {
             var response = await EverestClient.RetrieveCountForDay();
 
+            if (response == null)
+            {
+                EverestPlugin.LogError("Failed to retrieve daily count for tombstone.");
+                Destroy(gameObject);
+                return;
+            }
+
             _deathCountText.text = $"{response.count:n0}";
 
             var dateTime = DateTimeOffset.Parse(response.start_time_utc, CultureInfo.InvariantCulture);
