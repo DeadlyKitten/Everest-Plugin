@@ -85,7 +85,7 @@ namespace Everest.Api
                 if (unityWebRequest.responseCode == 429)
                 {
                     var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
-                    UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
+                    UIHandler.Instance.Toast($"You are being rate limited. Please wait some time before dying again.", Color.red, 3f, 2f);
                 }
 
                 return default;
