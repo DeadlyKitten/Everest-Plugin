@@ -20,7 +20,7 @@ namespace Everest.Core
         public static bool Enabled => enabled.Value;
         public static int MaxSkeletons => maxSkeletons.Value;
         public static bool AllowUploads => allowUploads.Value;
-        public static bool HideFloaters = hideFloaters.Value;
+        public static bool HideFloaters => hideFloaters.Value;
         public static bool ShowToasts => showToasts.Value;
         public static int SkeletonDrawDistance => skeletonDrawDistance.Value;
         public static float CullingUpdateFrequency => cullingUpdateFrequency.Value;
