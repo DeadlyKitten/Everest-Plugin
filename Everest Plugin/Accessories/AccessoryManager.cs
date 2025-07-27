@@ -50,9 +50,9 @@ namespace Everest.Accessories
             EverestPlugin.LogDebug($"AssetBundleManager initialized in {stopwatch.ElapsedMilliseconds} ms with {_accessories.Count} accessories loaded.");
         }
 
-        public static async UniTask<(bool success, SkeletonAccessory accessory)> TryGetAccessoryForSteamId(string steamId)
+        public static async UniTask<(bool success, SkeletonAccessory accessory)> TryGetAccessoryForSteamId(ulong steamId)
         {
-            if (_accessories.TryGetValue(steamId, out var prefab))
+            if (_accessories.TryGetValue(steamId.ToString(), out var prefab))
             {
                 var instance = (await UnityEngine.Object.InstantiateAsync(prefab)).FirstOrDefault();
                 if (instance == null)

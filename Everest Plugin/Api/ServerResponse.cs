@@ -1,10 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using MessagePack;
+using Newtonsoft.Json;
 
 namespace Everest.Api
 {
+    [MessagePackObject]
     public class ServerResponse
     {
-        public string identifier;
-        public SkeletonData[] data;
+        [JsonProperty("identifier"), Key(0)]
+        public Guid Guid;
+        [JsonProperty("data"), Key(1)]
+        public SkeletonData[] Skeletons;
     }
 }

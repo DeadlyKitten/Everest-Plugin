@@ -7,12 +7,16 @@ using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
 using Everest.Core;
+using Everest.Patches;
 using Everest.Utilities;
 using HarmonyLib;
+using MessagePack;
+using MessagePack.Formatters;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.SceneManagement;
+using Vector3Formatter = Everest.Formatters.Vector3Formatter;
 
 namespace Everest
 {
@@ -35,8 +39,11 @@ namespace Everest
 
             if (ConfigHandler.AllowUploads)
             {
+                var originalMethod = typeof(Character).GetMethod(nameof(Character.RPCA_Die), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                var patchMethod = typeof(CharacterDeathPatch).GetMethod(nameof(CharacterDeathPatch.Prefix), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+
                 var harmony = new Harmony("com.steven.peak.everest");
-                harmony.PatchAll();
+                harmony.Patch(original: originalMethod, prefix: new HarmonyMethod(patchMethod));
             }
             else LogInfo("Uploads are disabled in the configuration. Patching skipped.");
 
@@ -60,6 +67,8 @@ namespace Everest
 
             AccessoryManager.Initialize().Forget();
             TombstoneHandler.Initialize().Forget();
+
+            PrepareMessagePackResolver();
 
             LogInfo("Everest Initialized");
         }
@@ -90,6 +99,18 @@ namespace Everest
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
 
             UIHandler.Instance.Toast(message.ToString(), color, 7f, 3f);
+        }
+
+        private void PrepareMessagePackResolver()
+        {
+            var resolver = MessagePack.Resolvers.CompositeResolver.Create(
+                new IMessagePackFormatter[] { new Vector3Formatter() },
+                new IFormatterResolver[] { MessagePack.Resolvers.StandardResolverAllowPrivate.Instance }
+            );
+
+            var options = MessagePack.MessagePackSerializerOptions.Standard.WithResolver(resolver);
+
+            MessagePack.MessagePackSerializer.DefaultOptions = options;
         }
 
         #region logging

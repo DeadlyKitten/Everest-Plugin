@@ -11,10 +11,8 @@ namespace Everest.Core
     {
         private List<SkeletonAccessory> _accessories = new List<SkeletonAccessory>();
 
-        public async UniTask TryAddAccessory(string steamId)
+        public async UniTask TryAddAccessory(ulong steamId)
         {
-            if (string.IsNullOrEmpty(steamId)) return;
-
             var accessoryResult = await AccessoryManager.TryGetAccessoryForSteamId(steamId);
             if (accessoryResult.success)
             {

@@ -308,14 +308,14 @@ namespace Everest.Core
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var serverResponse = await EverestClient.RetrieveAsync(mapId);
 
-            if (serverResponse == null || serverResponse.data == null)
+            if (serverResponse == null || serverResponse.Skeletons == null)
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
                 UIHandler.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
                 return Array.Empty<SkeletonData>();
             }
-            SyncServerResponseIdentifier(serverResponse.identifier);
-            return serverResponse.data;
+            SyncServerResponseIdentifier(serverResponse.Guid.ToString());
+            return serverResponse.Skeletons;
         }
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClientAsync()
@@ -345,7 +345,7 @@ namespace Everest.Core
 
             var serverResponse = await EverestClient.RetrieveAsync(_serverResponseIdentifier);
 
-            return serverResponse.data;
+            return serverResponse.Skeletons;
         }
 
         private void SyncServerResponseIdentifier(string identifier)

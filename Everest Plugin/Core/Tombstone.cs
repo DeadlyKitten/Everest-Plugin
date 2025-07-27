@@ -46,9 +46,9 @@ namespace Everest.Core
                 return;
             }
 
-            _deathCountText.text = $"{response.count:n0}";
+            _deathCountText.text = $"{response.Count:n0}";
 
-            var dateTime = DateTimeOffset.Parse(response.start_time_utc, CultureInfo.InvariantCulture);
+            var dateTime = DateTimeOffset.Parse(response.StartTimeUTC, CultureInfo.InvariantCulture);
             _dateText.text = dateTime.ToString("MMMM dd, yyyy", CultureInfo.InvariantCulture);
         }
 #endif

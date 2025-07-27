@@ -90,6 +90,10 @@
     <EmbeddedResource Include="Resources\tombstone.bundle" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" Version="3.1.4" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;$(GameDir)\BepInEx\plugins&quot;" />
   </Target>

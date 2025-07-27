@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Cysharp.Threading.Tasks;
 using Everest.Core;
+using MessagePack;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -30,7 +31,7 @@ namespace Everest.Api
         {
             var endpoint = $"/Skeletons/submit?map_id={mapId}";
 
-            var payload = JsonConvert.SerializeObject(request, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var payload = MessagePackSerializer.Serialize(request);
 
             return await UnityPostRequest<SubmissionResponse>(payload, endpoint);
         }
@@ -63,6 +64,7 @@ namespace Everest.Api
         {
             using var downloadHandler = new DownloadHandlerBuffer();
             using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "GET", downloadHandler, null);
+            unityWebRequest.SetRequestHeader("Accept", "application/x-msgpack");
 
             _ = unityWebRequest.SendWebRequest();
             await UniTask.WaitUntil(() => unityWebRequest.isDone);
@@ -71,18 +73,19 @@ namespace Everest.Api
             {
                 EverestPlugin.LogError(unityWebRequest.error);
                 if (bailOnFail) return default;
+                return JsonConvert.DeserializeObject<T>(downloadHandler.text);
             }
 
-            return await UniTask.RunOnThreadPool(() => JsonConvert.DeserializeObject<T>(downloadHandler.text));
+            return await UniTask.RunOnThreadPool(() => MessagePackSerializer.Deserialize<T>(downloadHandler.data));
         }
 
-        private static async UniTask<T> UnityPostRequest<T>(string requestPayload, string endpoint)
+        private static async UniTask<T> UnityPostRequest<T>(byte[] requestPayload, string endpoint)
         {
             using var downloadHandler = new DownloadHandlerBuffer();
-            using var uploadHandler = new UploadHandlerRaw(Encoding.ASCII.GetBytes(requestPayload));
+            using var uploadHandler = new UploadHandlerRaw(requestPayload);
             using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "POST", downloadHandler, uploadHandler);
 
-            uploadHandler.contentType = "application/json";
+            uploadHandler.contentType = "application/x-msgpack";
 
             _ = unityWebRequest.SendWebRequest();
             await UniTask.WaitUntil(() => unityWebRequest.isDone);
@@ -96,6 +99,7 @@ namespace Everest.Api
                 {
                     var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
                     UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
+                    return default;
                 }
             }
 

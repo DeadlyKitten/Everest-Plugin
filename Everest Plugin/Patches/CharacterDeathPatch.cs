@@ -9,13 +9,13 @@ using UnityEngine;
 namespace Everest.Patches
 {
     [HarmonyPatch(typeof(Character), nameof(Character.RPCA_Die))]
-    public class CharacterDeathPatch
+    internal class CharacterDeathPatch
     {
-        private static void Prefix(Character __instance)
+        internal static void Prefix(Character __instance)
         {
             if (__instance != Character.localCharacter) return;
 
-            var steamId = SteamUser.GetSteamID().ToString();
+            var steamId = SteamUser.GetSteamID().m_SteamID;
             var authTicket = GetAuthTicket();
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var mapSegment = (int) MapHandler.Instance.GetCurrentSegment();
@@ -25,7 +25,7 @@ namespace Everest.Patches
 
             var (boneLocalPositions, boneLocalRotations) = GenerateLocalTransformData(__instance);
 
-            var requestPayload = new SubmissionRequest(steamId, authTicket, mapId, mapSegment, globalPosition, globalRotation, boneLocalPositions, boneLocalRotations);
+            var requestPayload = new SubmissionRequest(steamId, authTicket, mapId, globalPosition, globalRotation, boneLocalPositions, boneLocalRotations);
 
             EverestClient.SubmitDeath(requestPayload).Forget();
         }
