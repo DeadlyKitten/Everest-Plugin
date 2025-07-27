@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Compile Include="..\Everest Plugin\Accessories\FumoAccessory.cs" Link="FumoAccessory.cs" />
+    <Compile Include="..\Everest Plugin\Accessories\JuiceAccessory.cs" Link="JuiceAccessory.cs" />
     <Compile Include="..\Everest Plugin\Accessories\ShaderSwapper.cs" Link="ShaderSwapper.cs" />
     <Compile Include="..\Everest Plugin\Accessories\SkeletonAccessory.cs" Link="SkeletonAccessory.cs" />
     <Compile Include="..\Everest Plugin\Accessories\WilliamAccessory.cs" Link="WilliamAccessory.cs" />
