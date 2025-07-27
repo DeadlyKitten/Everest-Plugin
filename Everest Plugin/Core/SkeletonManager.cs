@@ -290,6 +290,7 @@ namespace Everest.Core
 
                         if (!colliders.Any())
                         {
+                            EverestPlugin.LogWarning("Skeleton is in midair! Skipping skeleton.");
                             skeleton.gameObject.SetActive(false);
                             return;
                         }
