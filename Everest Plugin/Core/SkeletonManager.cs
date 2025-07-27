@@ -283,6 +283,17 @@ namespace Everest.Core
                         skeleton.gameObject.SetActive(false);
                         return;
                     }
+
+                    if (ConfigHandler.HideFloaters)
+                    {
+                        var colliders = Physics.OverlapSphere(bones[boneIndex].position, 1f, LayerMask.GetMask("Default", "Terrain"));
+
+                        if (!colliders.Any())
+                        {
+                            skeleton.gameObject.SetActive(false);
+                            return;
+                        }
+                    }
                 }
             }
 

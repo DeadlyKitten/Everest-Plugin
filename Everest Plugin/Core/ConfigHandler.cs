@@ -11,6 +11,7 @@ namespace Everest.Core
         private static ConfigEntry<bool> enabled;
         private static ConfigEntry<int> maxSkeletons;
         private static ConfigEntry<bool> allowUploads;
+        private static ConfigEntry<bool> hideFloaters;
         private static ConfigEntry<bool> showToasts;
         private static ConfigEntry<int> skeletonDrawDistance;
         private static ConfigEntry<float> cullingUpdateFrequency;
@@ -19,6 +20,7 @@ namespace Everest.Core
         public static bool Enabled => enabled.Value;
         public static int MaxSkeletons => maxSkeletons.Value;
         public static bool AllowUploads => allowUploads.Value;
+        public static bool HideFloaters = hideFloaters.Value;
         public static bool ShowToasts => showToasts.Value;
         public static int SkeletonDrawDistance => skeletonDrawDistance.Value;
         public static float CullingUpdateFrequency => cullingUpdateFrequency.Value;
@@ -32,6 +34,7 @@ namespace Everest.Core
             enabled = config.Bind("General", "Enabled", true, "Enable or disable the Everest plugin.");
             maxSkeletons = config.Bind("General", "MaxSkeletons", 100, "Number of skeletons to spawn.");
             allowUploads = config.Bind("General", "AllowUploads", true, "Allow uploading your own skeletons.");
+            hideFloaters = config.Bind("General", "HideFloaters", true, "Attempt to hide skeletons that are floating in the air without a valid ground position.");
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
             skeletonDrawDistance = config.Bind("Performance", "SkeletonDrawDistance", 150, "Maximum distance (in units) at which skeletons are drawn.");
             cullingUpdateFrequency = config.Bind("Performance", "CullingUpdateFrequency", 1.0f, "Frequency (in seconds) at which the culling system updates. Lower values may improve responsiveness decrease performance.");
@@ -41,6 +44,7 @@ namespace Everest.Core
             EverestPlugin.LogInfo($"Enabled: {Enabled}");
             EverestPlugin.LogInfo(message: $"Max Skeletons: {MaxSkeletons}");
             EverestPlugin.LogInfo($"Allow Uploads: {AllowUploads}");
+            EverestPlugin.LogInfo($"Hide Floaters: {HideFloaters}");
             EverestPlugin.LogInfo($"Show Toasts: {ShowToasts}");
             EverestPlugin.LogInfo($"Skeleton Draw Distance: {SkeletonDrawDistance}");
             EverestPlugin.LogInfo($"Culling Update Frequency: {CullingUpdateFrequency} seconds");
