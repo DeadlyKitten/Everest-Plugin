@@ -84,8 +84,8 @@ namespace Everest
             message.AppendLine($"Everest Server Status: {serverStatus?.status ?? "offline"}");
             if (!string.IsNullOrEmpty(serverStatus.updateInfo))
                 message.AppendLine(serverStatus.updateInfo);
-            if (!string.IsNullOrEmpty(serverStatus.message))
-                message.AppendLine(serverStatus.message);
+            if (!string.IsNullOrEmpty(serverStatus.messageOfTheDay))
+                message.AppendLine(serverStatus.messageOfTheDay);
 
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
 
