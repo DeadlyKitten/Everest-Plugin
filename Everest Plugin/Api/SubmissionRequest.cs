@@ -6,31 +6,32 @@ namespace Everest.Api
 {
     public class SubmissionRequest
     {
-        public string steam_id;
-        public string auth_session_ticket;
-        public int map_id;
-        public int map_segment;
+        [JsonProperty("steam_id")]
+        public string SteamId { get; set; }
+        [JsonProperty("auth_session_ticket")]
+        public string AuthSessionTicket { get; set; }
+        [JsonProperty("map_id")]
+        public int MapId { get; set; }
+        [JsonProperty("map_segment")]
+        public int MapSegment { get; set; }
 
+        [JsonProperty("crash_site")]
+        public bool IsNearCrashSite { get; set; }
+
+        [JsonProperty("campfire")]
+        public bool IsNearCampfire { get; set; }
+
+        [JsonProperty("global_position")]
         [JsonConverter(typeof(Vector3Converter))]
-        public Vector3 global_position;
+        public Vector3 GlobalPosition { get; set; }
 
+        [JsonProperty("global_rotation")]
         [JsonConverter(typeof(Vector3Converter))]
-        public Vector3 global_rotation;
+        public Vector3 GlobalRotation { get; set; }
 
-        public Vector3[] bone_local_positions;
-        public Vector3[] bone_local_rotations;
-
-        public SubmissionRequest(string steamId, string authTicket, int mapId, int mapSegment, Vector3 globalPos, Vector3 globalRot, Vector3[] boneLocalPos, Vector3[] boneLocalRot)
-        {
-            this.steam_id = steamId;
-            this.auth_session_ticket = authTicket;
-            this.map_id = mapId;
-            this.map_segment = mapSegment;
-            this.global_position = globalPos;
-            this.global_rotation = globalRot;
-            this.bone_local_positions = boneLocalPos;
-            this.bone_local_rotations = boneLocalRot;
-        }
-
+        [JsonProperty("bone_local_positions")]
+        public Vector3[] BoneLocalPositions { get; set; }
+        [JsonProperty("bone_local_rotations")]
+        public Vector3[] BoneLocalRotations { get; set; }
     }
 }
