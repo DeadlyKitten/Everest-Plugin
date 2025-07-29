@@ -15,19 +15,70 @@ namespace Everest.Patches
         {
             if (__instance != Character.localCharacter) return;
 
-            var steamId = SteamUser.GetSteamID().ToString();
+            var steamId = GetSteamId();
             var authTicket = GetAuthTicket();
-            var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
-            var mapSegment = (int) MapHandler.Instance.GetCurrentSegment();
+            var mapId = GetMapId();
+            var mapSegment = GetMapSegment();
+
+            var isNearCampfire = CheckForCampfire(__instance);
+            var isNearCrashSite = CheckForBingBong(__instance);
 
             var globalPosition = __instance.transform.position;
             var globalRotation = __instance.transform.rotation.eulerAngles;
 
             var (boneLocalPositions, boneLocalRotations) = GenerateLocalTransformData(__instance);
 
-            var requestPayload = new SubmissionRequest(steamId, authTicket, mapId, mapSegment, globalPosition, globalRotation, boneLocalPositions, boneLocalRotations);
+            var requestPayload = new SubmissionRequest()
+            {
+                SteamId = steamId,
+                AuthSessionTicket = authTicket,
+                MapId = mapId,
+                MapSegment = mapSegment,
+                IsNearCampfire = isNearCampfire,
+                IsNearCrashSite = isNearCrashSite,
+                GlobalPosition = globalPosition,
+                GlobalRotation = globalRotation,
+                BoneLocalPositions = boneLocalPositions,
+                BoneLocalRotations = boneLocalRotations
+            };
 
             EverestClient.SubmitDeath(requestPayload).Forget();
+        }
+
+        private static string GetSteamId() => SteamUser.GetSteamID().ToString();
+
+        private static int GetMapId() => GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
+
+        private static int GetMapSegment() => (int)MapHandler.Instance.GetCurrentSegment();
+
+        private static string GetAuthTicket() => SteamAuthTicketService.GetSteamAuthTicket().Item1;
+
+        private static bool CheckForCampfire(Character character)
+        {
+            var campfires = GameObject.FindObjectsByType<Campfire>(FindObjectsSortMode.None)
+                .Where(x => x.advanceToSegment != Segment.Beach);
+
+            foreach (var campfire in campfires)
+            {
+                if (Vector3.Distance(character.Center, campfire.transform.position) < campfire.moraleBoostRadius)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool CheckForBingBong(Character character)
+        {
+            var bingBongSpawner = GameObject.FindObjectsByType<SingleItemSpawner>(FindObjectsSortMode.None)
+                .Where(SingleItemSpawner => SingleItemSpawner.prefab.name == "BingBong")
+                .FirstOrDefault();
+
+            if (!bingBongSpawner) return false;
+
+            const float CRASH_SITE_RADIUS = 50f;
+            return Vector3.Distance(character.Center, bingBongSpawner.transform.position) < CRASH_SITE_RADIUS;
         }
 
         private static (Vector3[] localPositions, Vector3[] localRotations) GenerateLocalTransformData(Character character)
@@ -40,11 +91,6 @@ namespace Everest.Patches
             var rotations = bones.Select(bone => bone.localRotation.eulerAngles).ToArray();
 
             return (positions, rotations);
-        }
-
-        private static string GetAuthTicket()
-        {
-            return SteamAuthTicketService.GetSteamAuthTicket().Item1;
         }
     }
 }
