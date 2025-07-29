@@ -17,7 +17,7 @@ namespace Everest.Api
 
         public static async UniTaskVoid SubmitDeath(SubmissionRequest request)
         {
-            var response = await SubmitAsync(request, request.map_id);
+            var response = await SubmitAsync(request, request.MapId);
 
             if (response != null && response.message != null)
             {
@@ -28,7 +28,7 @@ namespace Everest.Api
 
         public static async UniTask<SubmissionResponse> SubmitAsync(SubmissionRequest request, int mapId)
         {
-            var endpoint = $"/Skeletons/submit?map_id={mapId}";
+            var endpoint = $"/Skeletons/submit";
 
             var payload = JsonConvert.SerializeObject(request, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
@@ -37,7 +37,11 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
         {
-            var endpoint = $"/Skeletons/recent?map_id={mapId}&limit={ConfigHandler.MaxSkeletons}";
+            var maxSkeletons = ConfigHandler.MaxSkeletons;
+            var excludeCrashSite = ConfigHandler.ExcludeNearCrashSite;
+            var excludeCampfires = ConfigHandler.ExcludeNearCampfires;
+
+            var endpoint = $"/Skeletons/recent?map_id={mapId}&limit={maxSkeletons}&excludeCrashSite={excludeCrashSite}&excludeCampfire={excludeCampfires}";
             return await UnityGetRequest<ServerResponse>(endpoint);
         }
 

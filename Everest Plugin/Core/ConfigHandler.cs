@@ -12,6 +12,8 @@ namespace Everest.Core
         private static ConfigEntry<int> maxSkeletons;
         private static ConfigEntry<bool> allowUploads;
         private static ConfigEntry<bool> hideFloaters;
+        private static ConfigEntry<bool> excludeNearCrashSite;
+        private static ConfigEntry<bool> excludeNearCampfires;
         private static ConfigEntry<bool> showToasts;
         private static ConfigEntry<int> skeletonDrawDistance;
         private static ConfigEntry<float> cullingUpdateFrequency;
@@ -21,6 +23,8 @@ namespace Everest.Core
         public static int MaxSkeletons => maxSkeletons.Value;
         public static bool AllowUploads => allowUploads.Value;
         public static bool HideFloaters => hideFloaters.Value;
+        public static bool ExcludeNearCrashSite => excludeNearCrashSite.Value;
+        public static bool ExcludeNearCampfires => excludeNearCampfires.Value;
         public static bool ShowToasts => showToasts.Value;
         public static int SkeletonDrawDistance => skeletonDrawDistance.Value;
         public static float CullingUpdateFrequency => cullingUpdateFrequency.Value;
@@ -35,6 +39,8 @@ namespace Everest.Core
             maxSkeletons = config.Bind("General", "MaxSkeletons", 100, "Number of skeletons to spawn.");
             allowUploads = config.Bind("General", "AllowUploads", true, "Allow uploading your own skeletons.");
             hideFloaters = config.Bind("General", "HideFloaters", true, "Attempt to hide skeletons that are floating in the air without a valid ground position.");
+            excludeNearCrashSite = config.Bind("General", "ExcludeNearCrashSite", false, "Exclude skeletons that are near the crash site.");
+            excludeNearCampfires = config.Bind("General", "ExcludeNearCampfires", false, "Exclude skeletons that are near campfires.");
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
             skeletonDrawDistance = config.Bind("Performance", "SkeletonDrawDistance", 150, "Maximum distance (in units) at which skeletons are drawn.");
             cullingUpdateFrequency = config.Bind("Performance", "CullingUpdateFrequency", 1.0f, "Frequency (in seconds) at which the culling system updates. Lower values may improve responsiveness decrease performance.");
