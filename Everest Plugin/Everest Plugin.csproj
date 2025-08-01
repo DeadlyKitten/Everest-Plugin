@@ -49,6 +49,9 @@
     <Reference Include="UniTask">
       <HintPath>$(GameDir)\BepInEx\core\UniTask.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
