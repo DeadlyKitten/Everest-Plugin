@@ -11,6 +11,7 @@ using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.LowLevel;
 using UnityEngine.SceneManagement;
 
@@ -63,6 +64,20 @@ namespace Everest
 
             LogInfo("Everest Initialized");
         }
+
+#if DEBUG
+        private void Update()
+        {
+            if (Keyboard.current.kKey.wasPressedThisFrame)
+            {
+                var currentScene = SceneManager.GetActiveScene().name.ToLower();
+                if (currentScene.StartsWith("level_") || currentScene == "wilisland")
+                {
+                    Character.Die();
+                }
+            }
+        }
+#endif
 
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
