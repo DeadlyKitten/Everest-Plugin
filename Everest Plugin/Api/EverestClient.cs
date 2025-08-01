@@ -100,6 +100,7 @@ namespace Everest.Api
                 {
                     var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
                     UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
+                    return default;
                 }
             }
 
