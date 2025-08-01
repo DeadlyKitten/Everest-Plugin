@@ -286,7 +286,8 @@ namespace Everest.Core
 
                     if (ConfigHandler.HideFloaters)
                     {
-                        var colliders = Physics.OverlapSphere(bones[boneIndex].position, 1f, LayerMask.GetMask("Default", "Terrain"));
+                        var layerMask = LayerMask.GetMask("Default", "Terrain", "Map");
+                        var colliders = Physics.OverlapSphere(bones[boneIndex].position, 1f, layerMask);
 
                         if (!colliders.Any())
                         {
