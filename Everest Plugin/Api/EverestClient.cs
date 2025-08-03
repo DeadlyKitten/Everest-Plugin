@@ -30,7 +30,7 @@ namespace Everest.Api
         {
             var endpoint = $"/Skeletons/submit";
 
-            var payload = JsonConvert.SerializeObject(request, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var payload = JsonConvert.SerializeObject(request);
 
             return await UnityPostRequest<SubmissionResponse>(payload, endpoint);
         }
