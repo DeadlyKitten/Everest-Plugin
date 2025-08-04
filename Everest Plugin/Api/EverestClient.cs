@@ -1,9 +1,10 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Net.Http;
+using System.Text;
 using Cysharp.Threading.Tasks;
 using Everest.Core;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Everest.Api
 {
@@ -15,24 +16,19 @@ namespace Everest.Api
         private const string SERVER_BASE_URL = "https://peak-everest.com/api/v2";
 #endif
 
-        public static async UniTaskVoid SubmitDeath(SubmissionRequest request)
+        private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+
+        public static async UniTaskVoid SubmitDeathAsync(SubmissionRequest request)
         {
-            var response = await SubmitAsync(request, request.MapId);
+            var endpoint = $"/Skeletons/submit";
+            var payload = JsonConvert.SerializeObject(request);
+            var response = await PostAsync<SubmissionResponse>(endpoint, payload);
 
             if (response != null && response.message != null)
             {
                 UIHandler.Instance.Toast(response.message, Color.grey, 2f, 2f);
                 EverestPlugin.LogDebug(response.message);
             }
-        }
-
-        public static async UniTask<SubmissionResponse> SubmitAsync(SubmissionRequest request, int mapId)
-        {
-            var endpoint = $"/Skeletons/submit";
-
-            var payload = JsonConvert.SerializeObject(request);
-
-            return await UnityPostRequest<SubmissionResponse>(payload, endpoint);
         }
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
@@ -42,69 +38,67 @@ namespace Everest.Api
             var excludeCampfires = ConfigHandler.ExcludeNearCampfires;
 
             var endpoint = $"/Skeletons/recent?map_id={mapId}&limit={maxSkeletons}&excludeCrashSite={excludeCrashSite}&excludeCampfire={excludeCampfires}";
-            return await UnityGetRequest<ServerResponse>(endpoint);
+            return await GetAsync<ServerResponse>(endpoint);
         }
 
         public static async UniTask<ServerResponse> RetrieveAsync(string identifier)
         {
             var endpoint = $"/Skeletons/recent/{identifier}";
-            return await UnityGetRequest<ServerResponse>(endpoint);
+            return await GetAsync<ServerResponse>(endpoint);
         }
 
-        public static async UniTask<DailyCountResponse> RetrieveCountForDay()
+        public static async UniTask<DailyCountResponse> RetrieveCountForDayAsync()
         {
             var endpoint = "/Stats/daily/submissions";
-            return await UnityGetRequest<DailyCountResponse>(endpoint);
+            return await GetAsync<DailyCountResponse>(endpoint);
         }
 
-        public static async UniTask<ServerStatusResponse> RetrieveServerStatus(string version)
+        public static async UniTask<ServerStatusResponse> RetrieveServerStatusAsync(string version)
         {
             var endpoint = $"/Status?clientVersion={version}";
-            return await UnityGetRequest<ServerStatusResponse>(endpoint, false);
+            return await GetAsync<ServerStatusResponse>(endpoint, false);
         }
 
-        private static async UniTask<T> UnityGetRequest<T>(string endpoint, bool bailOnFail = true)
+        private static async UniTask<T> GetAsync<T>(string endpoint, bool bailOnFail = true)
         {
-            using var downloadHandler = new DownloadHandlerBuffer();
-            using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "GET", downloadHandler, null);
+            var response = await _httpClient.GetAsync($"{SERVER_BASE_URL}{endpoint}");
 
-            _ = unityWebRequest.SendWebRequest();
-            await UniTask.WaitUntil(() => unityWebRequest.isDone);
-
-            if (unityWebRequest.result != UnityWebRequest.Result.Success)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                EverestPlugin.LogError(unityWebRequest.error);
+                EverestPlugin.LogError($"Server responded with status code {response.StatusCode}");
+                if (response.StatusCode == (HttpStatusCode)521)
+                {
+                    EverestPlugin.LogError("Everest server is offline. Please try again later.");
+                    return default;
+                }
+                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(await response.Content.ReadAsStringAsync()).error);
                 if (bailOnFail) return default;
             }
 
-            return await UniTask.RunOnThreadPool(() => JsonConvert.DeserializeObject<T>(downloadHandler.text));
+            return await UniTask.RunOnThreadPool(async () => JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync()));
         }
 
-        private static async UniTask<T> UnityPostRequest<T>(string requestPayload, string endpoint)
+        private static async UniTask<T> PostAsync<T>(string endpoint, string requestPayload)
         {
-            using var downloadHandler = new DownloadHandlerBuffer();
-            using var uploadHandler = new UploadHandlerRaw(Encoding.ASCII.GetBytes(requestPayload));
-            using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "POST", downloadHandler, uploadHandler);
 
-            uploadHandler.contentType = "application/json";
+            var response = await _httpClient.PostAsync($"{SERVER_BASE_URL}{endpoint}", 
+                new StringContent(requestPayload, Encoding.UTF8, "application/json"));
 
-            _ = unityWebRequest.SendWebRequest();
-            await UniTask.WaitUntil(() => unityWebRequest.isDone);
 
-            if (unityWebRequest.responseCode != 200)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                EverestPlugin.LogError($"Server responded with status code {unityWebRequest.responseCode}");
-                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(downloadHandler.text).error);
+                EverestPlugin.LogError($"Server responded with status code {response.StatusCode}");
+                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(await response.Content.ReadAsStringAsync()).error);
 
-                if (unityWebRequest.responseCode == 429)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
-                    var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
+                    var timeToWait = response.Headers.RetryAfter.Delta.Value.Seconds;
                     UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
                     return default;
                 }
             }
 
-            return JsonConvert.DeserializeObject<T>(downloadHandler.text);
+            return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync());
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Everest.Patches
                 BoneLocalRotations = boneLocalRotations
             };
 
-            EverestClient.SubmitDeath(requestPayload).Forget();
+            EverestClient.SubmitDeathAsync(requestPayload).Forget();
         }
 
         private static string GetSteamId() => SteamUser.GetSteamID().ToString();
