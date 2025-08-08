@@ -94,13 +94,13 @@ namespace Everest
         private async UniTaskVoid GetServerStatus()
         {
             LogWarning(Info.Metadata.Version.ToString());
-            var serverStatus = await EverestClient.RetrieveServerStatus(Info.Metadata.Version.ToString());
+            var serverStatus = await EverestClient.RetrieveServerStatusAsync(Info.Metadata.Version.ToString());
 
             var message = new StringBuilder();
             message.AppendLine($"Everest Server Status: {serverStatus?.status ?? "offline"}");
-            if (!string.IsNullOrEmpty(serverStatus.messageOfTheDay))
+            if (!string.IsNullOrEmpty(serverStatus?.messageOfTheDay))
                 message.AppendLine(serverStatus.messageOfTheDay);
-            if (!string.IsNullOrEmpty(serverStatus.updateInfo))
+            if (!string.IsNullOrEmpty(serverStatus?.updateInfo))
                 message.AppendLine(serverStatus.updateInfo);
 
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;

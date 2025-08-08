@@ -37,7 +37,7 @@ namespace Everest.Core
 
         private async UniTaskVoid Initialize()
         {
-            var response = await EverestClient.RetrieveCountForDay();
+            var response = await EverestClient.RetrieveCountForDayAsync();
 
             if (response == null)
             {
