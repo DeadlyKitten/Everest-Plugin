@@ -16,8 +16,8 @@ namespace Everest.Accessories
             var renderer = GetComponentInParent<SkinnedMeshRenderer>();
             if (renderer)
             {
-                _originalMaterial = renderer.material;
-                renderer.material = _material;
+                _originalMaterial = renderer.sharedMaterial;
+                renderer.sharedMaterial = _material;
             }
         }
 
@@ -26,7 +26,7 @@ namespace Everest.Accessories
             var renderer = GetComponentInParent<SkinnedMeshRenderer>();
             if (renderer && _originalMaterial)
             {
-                renderer.material = _originalMaterial;
+                renderer.sharedMaterial = _originalMaterial;
             }
         }
 #endif
