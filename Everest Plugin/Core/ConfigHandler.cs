@@ -22,6 +22,7 @@ namespace Everest.Core
 
         private static ConfigEntry<bool> showSkeletonNametags;
         private static ConfigEntry<bool> showTimeSinceDeath;
+        private static ConfigEntry<bool> showSecondsAlways;
         private static ConfigEntry<float> maxDistanceForVisibleNametag;
         private static ConfigEntry<float> minDistanceForVisibleNametag;
         private static ConfigEntry<float> maxAngleForVisibleNametag;
@@ -43,6 +44,7 @@ namespace Everest.Core
         public static int MaxVisibleSkeletons => maxVisibleSkeletons.Value;
         public static bool ShowSkeletonNametags => showSkeletonNametags.Value;
         public static bool ShowTimeSinceDeath => showTimeSinceDeath.Value;
+        public static bool ShowSecondsAlways => showSecondsAlways.Value;
         public static float MaxDistanceForVisibleNametag => maxDistanceForVisibleNametag.Value;
         public static float MinDistanceForVisibleNametag => minDistanceForVisibleNametag.Value;
         public static float MaxAngleForVisibleNametag => maxAngleForVisibleNametag.Value;
@@ -69,6 +71,7 @@ namespace Everest.Core
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
             showSkeletonNametags = config.Bind("UI", "ShowSkeletonNametags", true, "Enable or disable skeleton nametags.");
             showTimeSinceDeath = config.Bind("UI", "ShowTimeSinceDeath", true, "Enable or disable showing the time since death in skeleton nametags.");
+            showSecondsAlways = config.Bind("UI", "ShowSecondsAlways", false, "Always show seconds in the time since death, even for recent deaths.");
             maxDistanceForVisibleNametag = config.Bind("UI", "MaxDistanceForVisibleNametag", 8f, "Maximum distance at which skeleton nametags are visible.");
             minDistanceForVisibleNametag = config.Bind("UI", "MinDistanceForVisibleNametag", 3f, "Minimum distance at which skeleton nametags are visible.");
             maxAngleForVisibleNametag = config.Bind("UI", "MaxAngleForVisibleNametag", 25f, "Maximum angle (in degrees) from the camera at which skeleton nametags are visible.");
