@@ -13,6 +13,7 @@ namespace Everest.UI
         private TextMeshProUGUI _text;
         private string _nickname;
         private DateTime _timestamp;
+        private float _timeSinceLastUpdate;
 
         public void Initialize(string nickname, DateTime timestamp)
         {
@@ -20,6 +21,7 @@ namespace Everest.UI
             _timestamp = timestamp;
             gameObject.name = _nickname;
             UpdateText();
+            _timeSinceLastUpdate = 0f;
         }
 
         private void Awake()
@@ -30,8 +32,12 @@ namespace Everest.UI
 
         private void Update()
         {
-            if (ConfigHandler.ShowTimeSinceDeath)
+            if (_timeSinceLastUpdate >= 1f && ConfigHandler.ShowTimeSinceDeath)
+            {
                 UpdateText();
+                _timeSinceLastUpdate = 0f;
+            }
+            else _timeSinceLastUpdate += Time.deltaTime;
         }
 
         private void UpdateText()
@@ -45,14 +51,16 @@ namespace Everest.UI
             _text.text = builder.ToString();
         }
 
+
+
         private string CreateFormatedTime(DateTime timestamp)
         {
             TimeSpan elapsed = DateTime.UtcNow - timestamp;
 
             if (elapsed.TotalHours >= 1)
-                return $"{(int)elapsed.TotalHours}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+                return $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m {(ConfigHandler.ShowSecondsAlways ? $"{elapsed.Seconds}s" : string.Empty)}";
             else if (elapsed.TotalMinutes >= 1)
-                return $"{elapsed.Minutes}:{elapsed.Seconds:00}";
+                return $"{elapsed.Minutes}m {elapsed.Seconds}s";
             else
                 return $"{elapsed.Seconds} seconds";
 
