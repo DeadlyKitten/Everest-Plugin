@@ -14,8 +14,8 @@ namespace Everest.UI
         private Camera _playerCamera;
 
         private float _maxDistance = ConfigHandler.MaxDistanceForVisibleNametag;
-        private float _minDistance = 1f;
-        private float _maxViewAngle = 25f;
+        private float _minDistance = ConfigHandler.MinDistanceForVisibleNametag;
+        private float _maxViewAngle = ConfigHandler.MaxAngleForVisibleNametag;
 
         private float _textVerticalOffset = 0.6f;
         private AnimationCurve _textScaleCurve = new AnimationCurve(new Keyframe(0, 0.8f), new Keyframe(0.2f, 1.2f), new Keyframe(1f, 2.0f));

@@ -23,6 +23,7 @@ namespace Everest.Core
         private static ConfigEntry<bool> showSkeletonNametags;
         private static ConfigEntry<bool> showTimeSinceDeath;
         private static ConfigEntry<float> maxDistanceForVisibleNametag;
+        private static ConfigEntry<float> minDistanceForVisibleNametag;
         private static ConfigEntry<float> maxAngleForVisibleNametag;
         private static ConfigEntry<float> maxNametagSize;
         private static ConfigEntry<float> minNametagSize;
@@ -43,6 +44,7 @@ namespace Everest.Core
         public static bool ShowSkeletonNametags => showSkeletonNametags.Value;
         public static bool ShowTimeSinceDeath => showTimeSinceDeath.Value;
         public static float MaxDistanceForVisibleNametag => maxDistanceForVisibleNametag.Value;
+        public static float MinDistanceForVisibleNametag => minDistanceForVisibleNametag.Value;
         public static float MaxAngleForVisibleNametag => maxAngleForVisibleNametag.Value;
         public static float MaxNametagSize => maxNametagSize.Value;
         public static float MinNametagSize => minNametagSize.Value;
@@ -68,6 +70,7 @@ namespace Everest.Core
             showSkeletonNametags = config.Bind("UI", "ShowSkeletonNametags", true, "Enable or disable skeleton nametags.");
             showTimeSinceDeath = config.Bind("UI", "ShowTimeSinceDeath", true, "Enable or disable showing the time since death in skeleton nametags.");
             maxDistanceForVisibleNametag = config.Bind("UI", "MaxDistanceForVisibleNametag", 8f, "Maximum distance at which skeleton nametags are visible.");
+            minDistanceForVisibleNametag = config.Bind("UI", "MinDistanceForVisibleNametag", 3f, "Minimum distance at which skeleton nametags are visible.");
             maxAngleForVisibleNametag = config.Bind("UI", "MaxAngleForVisibleNametag", 25f, "Maximum angle (in degrees) from the camera at which skeleton nametags are visible.");
             maxNametagSize = config.Bind("UI", "MaxNametagSize", 2.5f, "Maximum size of skeleton nametags.");
             minNametagSize = config.Bind("UI", "MinNametagSize", 1.2f, "Minimum size of skeleton nametags.");
