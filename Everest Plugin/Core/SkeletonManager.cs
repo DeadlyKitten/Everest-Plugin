@@ -125,7 +125,7 @@ namespace Everest.Core
             if (resultsCount == 0)
             {
                 _objectsInRange.Clear();
-                await ProcessCullingResultsAsync();
+                ProcessCullingResults();
                 _isCulling = false;
                 return;
             }
@@ -151,12 +151,12 @@ namespace Everest.Core
                 _objectsInRange.Add(_results[i].index);
             }
 
-            await ProcessCullingResultsAsync();
+            ProcessCullingResults();
 
             _isCulling = false;
         }
 
-        private async UniTask ProcessCullingResultsAsync()
+        private void ProcessCullingResults()
         {
             if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
                 return;
@@ -176,7 +176,7 @@ namespace Everest.Core
                     if (_skeletons[i].Instance == null)
                     {
                         _skeletons[i].Instance = _skeletonPool.Get();
-                        await PrepareSkeletonAsync(_skeletons[i].Data, _skeletons[i].Instance);
+                        PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
                     }
                 }
                 else
@@ -267,7 +267,7 @@ namespace Everest.Core
             }
         }
 
-        private async UniTask PrepareSkeletonAsync(SkeletonData skeletonData, Skeleton skeleton)
+        private void PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
         {
             skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
 
@@ -300,8 +300,7 @@ namespace Everest.Core
                 }
             }
 
-            var steamId = skeletonData.steam_id;
-            await skeleton.TryAddAccessory(steamId);
+            skeleton.Initialize(skeletonData).Forget();
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonDataAsync()
