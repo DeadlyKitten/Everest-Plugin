@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Everest</RootNamespace>
     <AssemblyName>Everest</AssemblyName>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <Version>1.1.1</Version>
     <Authors>Steven 🎀</Authors>
   </PropertyGroup>
