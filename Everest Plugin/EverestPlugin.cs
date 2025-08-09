@@ -89,7 +89,11 @@ namespace Everest
                 GetServerStatus().Forget();
 
             if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
-                new GameObject("SkeletonManager").AddComponent<SkeletonManager>();
+            {
+                new GameObject("Skeleton Manager").AddComponent<SkeletonManager>();
+
+                if (ConfigHandler.ShowSkeletonNametags) new GameObject("Skeleton UI Manager").AddComponent<SkeletonUIController>();
+            }
         }
 
         private async UniTaskVoid GetServerStatus()
