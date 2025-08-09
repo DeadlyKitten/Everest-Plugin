@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using Cysharp.Threading.Tasks;
 using Everest.Core;
+using Everest.UI;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace Everest.Api
 
             if (response != null && response.message != null)
             {
-                UIHandler.Instance.Toast(response.message, Color.grey, 2f, 2f);
+                ToastController.Instance.Toast(response.message, Color.grey, 2f, 2f);
                 EverestPlugin.LogDebug(response.message);
             }
         }
@@ -93,7 +94,7 @@ namespace Everest.Api
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     var timeToWait = response.Headers.RetryAfter.Delta.Value.Seconds;
-                    UIHandler.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
+                    ToastController.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
                     return default;
                 }
             }

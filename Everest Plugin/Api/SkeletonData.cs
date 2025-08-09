@@ -7,6 +7,7 @@ namespace Everest.Api
     public class SkeletonData
     {
         public string steam_id;
+        public string nickname;
         public int map_id;
         public int map_segment;
 

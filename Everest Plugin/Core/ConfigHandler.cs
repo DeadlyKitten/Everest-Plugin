@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
+using UnityEngine;
 
 namespace Everest.Core
 {
@@ -19,6 +20,17 @@ namespace Everest.Core
         private static ConfigEntry<float> cullingUpdateFrequency;
         private static ConfigEntry<int> maxVisibleSkeletons;
 
+        private static ConfigEntry<bool> showSkeletonNametags;
+        private static ConfigEntry<bool> showTimeSinceDeath;
+        private static ConfigEntry<float> maxDistanceForVisibleNametag;
+        private static ConfigEntry<float> minDistanceForVisibleNametag;
+        private static ConfigEntry<float> maxAngleForVisibleNametag;
+        private static ConfigEntry<float> maxNametagSize;
+        private static ConfigEntry<float> minNametagSize;
+        private static ConfigEntry<Color> nametagColor;
+        private static ConfigEntry<float> nametagOutlineWidth;
+        private static ConfigEntry<Color> nametagOutlineColor;
+
         public static bool Enabled => enabled.Value;
         public static int MaxSkeletons => maxSkeletons.Value;
         public static bool AllowUploads => allowUploads.Value;
@@ -29,6 +41,16 @@ namespace Everest.Core
         public static int SkeletonDrawDistance => skeletonDrawDistance.Value;
         public static float CullingUpdateFrequency => cullingUpdateFrequency.Value;
         public static int MaxVisibleSkeletons => maxVisibleSkeletons.Value;
+        public static bool ShowSkeletonNametags => showSkeletonNametags.Value;
+        public static bool ShowTimeSinceDeath => showTimeSinceDeath.Value;
+        public static float MaxDistanceForVisibleNametag => maxDistanceForVisibleNametag.Value;
+        public static float MinDistanceForVisibleNametag => minDistanceForVisibleNametag.Value;
+        public static float MaxAngleForVisibleNametag => maxAngleForVisibleNametag.Value;
+        public static float MaxNametagSize => maxNametagSize.Value;
+        public static float MinNametagSize => minNametagSize.Value;
+        public static Color NametagColor => nametagColor.Value;
+        public static float NametagOutlineWidth => nametagOutlineWidth.Value;
+        public static Color NametagOutlineColor => nametagOutlineColor.Value;
 
 
         public static void Initialize()
@@ -41,10 +63,20 @@ namespace Everest.Core
             hideFloaters = config.Bind("General", "HideFloaters", true, "Attempt to hide skeletons that are floating in the air without a valid ground position.");
             excludeNearCrashSite = config.Bind("General", "ExcludeNearCrashSite", false, "Exclude skeletons that are near the crash site.");
             excludeNearCampfires = config.Bind("General", "ExcludeNearCampfires", false, "Exclude skeletons that are near campfires.");
-            showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
             skeletonDrawDistance = config.Bind("Performance", "SkeletonDrawDistance", 150, "Maximum distance (in units) at which skeletons are drawn.");
             cullingUpdateFrequency = config.Bind("Performance", "CullingUpdateFrequency", 1.0f, "Frequency (in seconds) at which the culling system updates. Lower values may improve responsiveness decrease performance.");
             maxVisibleSkeletons = config.Bind("Performance", "MaxVisibleSkeletons", 100, "Maximum number of skeletons that can be visible at once.");
+            showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
+            showSkeletonNametags = config.Bind("UI", "ShowSkeletonNametags", true, "Enable or disable skeleton nametags.");
+            showTimeSinceDeath = config.Bind("UI", "ShowTimeSinceDeath", true, "Enable or disable showing the time since death in skeleton nametags.");
+            maxDistanceForVisibleNametag = config.Bind("UI", "MaxDistanceForVisibleNametag", 8f, "Maximum distance at which skeleton nametags are visible.");
+            minDistanceForVisibleNametag = config.Bind("UI", "MinDistanceForVisibleNametag", 3f, "Minimum distance at which skeleton nametags are visible.");
+            maxAngleForVisibleNametag = config.Bind("UI", "MaxAngleForVisibleNametag", 25f, "Maximum angle (in degrees) from the camera at which skeleton nametags are visible.");
+            maxNametagSize = config.Bind("UI", "MaxNametagSize", 2.5f, "Maximum size of skeleton nametags.");
+            minNametagSize = config.Bind("UI", "MinNametagSize", 1.2f, "Minimum size of skeleton nametags.");
+            nametagColor = config.Bind("UI", "NametagColor", Color.white, "Color of skeleton nametags.");
+            nametagOutlineWidth = config.Bind("UI", "NametagOutlineWidth", 0.05f, "Width of the outline around skeleton nametags.");
+            nametagOutlineColor = config.Bind("UI", "NametagOutlineColor", Color.black, "Color of the outline around skeleton nametags.");
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
             EverestPlugin.LogInfo($"Enabled: {Enabled}");

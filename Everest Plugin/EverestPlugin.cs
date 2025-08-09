@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
 using Everest.Core;
+using Everest.UI;
 using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;
@@ -55,7 +56,7 @@ namespace Everest
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
 
-            if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<UIHandler>();
+            if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<ToastController>();
 
             SkeletonManager.LoadComputeShaderAsync().Forget();
             SkeletonManager.LoadSkeletonPrefabAsync().Forget();
@@ -88,7 +89,11 @@ namespace Everest
                 GetServerStatus().Forget();
 
             if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
-                new GameObject("SkeletonManager").AddComponent<SkeletonManager>();
+            {
+                new GameObject("Skeleton Manager").AddComponent<SkeletonManager>();
+
+                if (ConfigHandler.ShowSkeletonNametags) new GameObject("Skeleton UI Manager").AddComponent<SkeletonUIController>();
+            }
         }
 
         private async UniTaskVoid GetServerStatus()
@@ -105,7 +110,7 @@ namespace Everest
 
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
 
-            UIHandler.Instance.Toast(message.ToString(), color, 7f, 3f);
+            ToastController.Instance.Toast(message.ToString(), color, 7f, 3f);
         }
 
         #region logging

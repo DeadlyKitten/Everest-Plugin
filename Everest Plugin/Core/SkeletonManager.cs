@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using Everest.Api;
+using Everest.UI;
 using Everest.Utilities;
 using ExitGames.Client.Photon;
 using Photon.Pun;
@@ -71,7 +72,7 @@ namespace Everest.Core
             if (_skeletons == null || _skeletons.Length == 0)
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
-                UIHandler.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
+                ToastController.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
                 return;
             }
             EverestPlugin.LogDebug($"Received {_skeletons.Length} skeletons.");
@@ -85,7 +86,7 @@ namespace Everest.Core
             _initialized = true;
 
             stopwatch.Stop();
-            UIHandler.Instance.Toast($"{_totalSkeletonCount} skeletons have been summoned! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 3f);
+            ToastController.Instance.Toast($"{_totalSkeletonCount} skeletons have been summoned! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 3f);
         }
 
         private void Update()
@@ -124,7 +125,7 @@ namespace Everest.Core
             if (resultsCount == 0)
             {
                 _objectsInRange.Clear();
-                await ProcessCullingResultsAsync();
+                ProcessCullingResults();
                 _isCulling = false;
                 return;
             }
@@ -150,12 +151,12 @@ namespace Everest.Core
                 _objectsInRange.Add(_results[i].index);
             }
 
-            await ProcessCullingResultsAsync();
+            ProcessCullingResults();
 
             _isCulling = false;
         }
 
-        private async UniTask ProcessCullingResultsAsync()
+        private void ProcessCullingResults()
         {
             if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
                 return;
@@ -175,7 +176,7 @@ namespace Everest.Core
                     if (_skeletons[i].Instance == null)
                     {
                         _skeletons[i].Instance = _skeletonPool.Get();
-                        await PrepareSkeletonAsync(_skeletons[i].Data, _skeletons[i].Instance);
+                        PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
                     }
                 }
                 else
@@ -256,7 +257,7 @@ namespace Everest.Core
             if (_skeletonPrefab == null)
             {
                 EverestPlugin.LogError("Skeleton prefab not found in Resources.");
-                UIHandler.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
+                ToastController.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
                 return;
             }
 
@@ -266,7 +267,7 @@ namespace Everest.Core
             }
         }
 
-        private async UniTask PrepareSkeletonAsync(SkeletonData skeletonData, Skeleton skeleton)
+        private void PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
         {
             skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
 
@@ -299,8 +300,7 @@ namespace Everest.Core
                 }
             }
 
-            var steamId = skeletonData.steam_id;
-            await skeleton.TryAddAccessory(steamId);
+            skeleton.Initialize(skeletonData).Forget();
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonDataAsync()
@@ -324,7 +324,7 @@ namespace Everest.Core
             if (serverResponse == null || serverResponse.data == null)
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
-                UIHandler.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
+                ToastController.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
                 return Array.Empty<SkeletonData>();
             }
             SyncServerResponseIdentifier(serverResponse.identifier);
