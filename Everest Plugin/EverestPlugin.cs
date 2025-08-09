@@ -12,13 +12,12 @@ using Everest.Utilities;
 using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.LowLevel;
 using UnityEngine.SceneManagement;
 
 namespace Everest
 {
-    [BepInPlugin("com.steven.peak.everest", "Everest", "1.1.1")]
+    [BepInPlugin("com.steven.peak.everest", "Everest", "1.2.0")]
     public class EverestPlugin : BaseUnityPlugin
     {
         public static EverestPlugin Instance;
