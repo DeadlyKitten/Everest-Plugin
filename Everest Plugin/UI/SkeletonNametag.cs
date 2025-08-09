@@ -51,8 +51,6 @@ namespace Everest.UI
             _text.text = builder.ToString();
         }
 
-
-
         private string CreateFormatedTime(DateTime timestamp)
         {
             TimeSpan elapsed = DateTime.UtcNow - timestamp;
@@ -63,7 +61,6 @@ namespace Everest.UI
                 return $"{elapsed.Minutes}m {elapsed.Seconds}s";
             else
                 return $"{elapsed.Seconds} seconds";
-
         }
     }
 }
