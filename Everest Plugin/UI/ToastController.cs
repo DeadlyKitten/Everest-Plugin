@@ -5,11 +5,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Everest
+namespace Everest.UI
 {
-    public class UIHandler : MonoBehaviour
+    public class ToastController : MonoBehaviour
     {
-        public static UIHandler Instance;
+        public static ToastController Instance;
 
         TextMeshProUGUI textMesh;
 
