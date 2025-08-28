@@ -10,7 +10,6 @@ using Everest.UI;
 using Everest.Utilities;
 using ExitGames.Client.Photon;
 using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.Rendering;
@@ -179,7 +178,7 @@ namespace Everest.Core
                     if (_skeletons[i].Instance == null)
                     {
                         _skeletons[i].Instance = _skeletonPool.Get();
-                        PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
+                        await PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
                     }
                 }
                 else
@@ -278,18 +277,17 @@ namespace Everest.Core
             }
         }
 
-        private void PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
+        private async UniTask PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
         {
             skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
 
-            var bones = skeleton.transform.GetComponentsInChildren<Transform>().Where(x => Enum.GetNames(typeof(SkeletonBodypart)).Contains(x.name)).ToList();
             for (int boneIndex = 0; boneIndex < 18; boneIndex++)
             {
-                bones[boneIndex].SetLocalPositionAndRotation(skeletonData.bone_local_positions[boneIndex], Quaternion.Euler(skeletonData.bone_local_rotations[boneIndex]));
+                skeleton.Bones[boneIndex].SetLocalPositionAndRotation(skeletonData.bone_local_positions[boneIndex], Quaternion.Euler(skeletonData.bone_local_rotations[boneIndex]));
 
                 if (boneIndex == 0)
                 {
-                    if (Vector3.Distance(bones[boneIndex].position, TombstoneHandler.TombstonePosition) < 1f)
+                    if (Vector3.Distance(skeleton.Bones[boneIndex].position, TombstoneHandler.TombstonePosition) < 1f)
                     {
                         EverestPlugin.LogWarning("Skeleton position is too close to tombstone, skipping skeleton.");
                         skeleton.gameObject.SetActive(false);
@@ -299,7 +297,7 @@ namespace Everest.Core
                     if (ConfigHandler.HideFloaters)
                     {
                         var layerMask = LayerMask.GetMask("Default", "Terrain", "Map");
-                        var colliders = Physics.OverlapSphere(bones[boneIndex].position, 1f, layerMask);
+                        var colliders = Physics.OverlapSphere(skeleton.Bones[boneIndex].position, 1f, layerMask);
 
                         if (!colliders.Any())
                         {
@@ -311,7 +309,7 @@ namespace Everest.Core
                 }
             }
 
-            skeleton.Initialize(skeletonData).Forget();
+            await skeleton.Initialize(skeletonData);
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonDataAsync()

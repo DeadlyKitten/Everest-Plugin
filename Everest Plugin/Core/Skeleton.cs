@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
+using Everest.Utilities;
 using UnityEngine;
 using Zorro.Core;
 
@@ -10,25 +12,22 @@ namespace Everest.Core
 {
     public class Skeleton : MonoBehaviour
     {
-        public static List<Skeleton> AllSkeletons { get; private set; } = new List<Skeleton>();
         public static List<Skeleton> AllActiveSkeletons { get; private set; } = new List<Skeleton>();
 
-        public Transform HeadBone { get; set; }
+        public Transform HeadBone => Bones[(int)SkeletonBodypart.Head];
         public string Nickname { get; private set; }
         public DateTime Timestamp { get; private set; }
+        public Transform[] Bones { get; private set; }
 
-        private SkinnedMeshRenderer _meshRenderer;
         private List<SkeletonAccessory> _accessories = new List<SkeletonAccessory>();
 
         private void Awake()
         {
-            _meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-            HeadBone = transform.FindChildRecursive("Head");
-
-            AllSkeletons.Add(this);
+            Bones = transform.GetComponentsInChildren<Transform>()
+                .Where(x => Enum.GetNames(typeof(SkeletonBodypart))
+                .Contains(x.name))
+                .ToArray();
         }
-
-        private void OnDestroy() => AllSkeletons.Remove(this);
 
         private void OnEnable() => AllActiveSkeletons.Add(this);
 
