@@ -38,6 +38,7 @@ namespace Everest.Core
         private float _elapsedTime = -2f;
         private bool _initialized = false;
         private bool _isCulling = false;
+        private Stopwatch _cullLoopTimer = new Stopwatch();
 
         private int _totalSkeletonCount;
 
@@ -125,7 +126,7 @@ namespace Everest.Core
             if (resultsCount == 0)
             {
                 _objectsInRange.Clear();
-                ProcessCullingResults();
+                await ProcessCullingResults();
                 _isCulling = false;
                 return;
             }
@@ -151,13 +152,15 @@ namespace Everest.Core
                 _objectsInRange.Add(_results[i].index);
             }
 
-            ProcessCullingResults();
+            await ProcessCullingResults();
 
             _isCulling = false;
         }
 
-        private void ProcessCullingResults()
+        private async UniTask ProcessCullingResults()
         {
+            _cullLoopTimer.Restart();
+
             if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
                 return;
 
@@ -187,7 +190,15 @@ namespace Everest.Core
                         _skeletons[i].Instance = null;
                     }
                 }
+
+                if (_cullLoopTimer.Elapsed.TotalMilliseconds >= 1)
+                {
+                    await UniTask.Yield();
+                    _cullLoopTimer.Restart();
+                }
             }
+
+            _cullLoopTimer.Stop();
         }
 
         private async UniTask<int> GetResultCountAsync()
