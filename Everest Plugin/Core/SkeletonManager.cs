@@ -46,12 +46,14 @@ namespace Everest.Core
             if (ConfigHandler.MaxSkeletons <= 0)
             {
                 EverestPlugin.LogInfo("Number of skeletons is set to 0 in the configuration. Exiting...");
+                DestroyImmediate(gameObject);
                 return;
             }
 
             if (_skeletonPrefab == null)
             {
                 EverestPlugin.LogDebug("Skeleton prefab not set. Not spawning skeletons.");
+                DestroyImmediate(gameObject);
                 return;
             }
 
