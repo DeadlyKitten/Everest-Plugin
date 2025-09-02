@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using BepInEx;
 using BepInEx.Logging;
@@ -22,7 +23,7 @@ namespace Everest
     {
         public static EverestPlugin Instance;
 
-        private void Awake()
+        private async UniTask Awake()
         {
             Instance = this;
 
@@ -60,11 +61,11 @@ namespace Everest
 
             if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<ToastController>();
 
-            SkeletonManager.LoadComputeShaderAsync().Forget();
-            SkeletonManager.LoadSkeletonPrefabAsync().Forget();
+            await SkeletonManager.LoadComputeShaderAsync();
+            await SkeletonManager.LoadSkeletonPrefabAsync();
 
-            AccessoryManager.Initialize().Forget();
-            TombstoneHandler.Initialize().Forget();
+            await AccessoryManager.Initialize();
+            await TombstoneHandler.Initialize();
 
             stopwatch.Stop();
             LogInfo($"Everest Initialized in {stopwatch.ElapsedMilliseconds / 1000f} seconds.");
@@ -86,8 +87,6 @@ namespace Everest
 
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            LogInfo(newScene.name);
-
             if (newScene.name.ToLower() == "airport")
                 GetServerStatus().Forget();
 
@@ -107,7 +106,6 @@ namespace Everest
 
         private async UniTaskVoid GetServerStatus()
         {
-            LogWarning(Info.Metadata.Version.ToString());
             var serverStatus = await EverestClient.RetrieveServerStatusAsync(Info.Metadata.Version.ToString());
 
             LogInfo($"Everest Server Status: {serverStatus?.status ?? "offline"}");
@@ -128,7 +126,7 @@ namespace Everest
             }
 
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
-
+            
             ToastController.Instance.Toast(message.ToString(), color, 7f, 3f);
         }
 

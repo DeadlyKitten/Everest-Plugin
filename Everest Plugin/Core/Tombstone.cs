@@ -21,13 +21,17 @@ namespace Everest.Core
         private TextMeshPro _dateText;
 
 #if PLUGIN
-        private void Awake()
+        private async UniTaskVoid Awake()
         {
-            SetupFonts().Forget();
-            Initialize().Forget();
+            EverestPlugin.LogInfo("Initializing Tombstone...");
+
+            await SetupFonts();
+            await Initialize();
+
+            EverestPlugin.LogInfo("Tombstone Initialized!");
         }
 
-        private async UniTaskVoid SetupFonts()
+        private async UniTask SetupFonts()
         {
             var font = await FontUtility.GetFont();
             _deathCountText.font = font;
@@ -35,7 +39,7 @@ namespace Everest.Core
             _dateText.font = font;
         }
 
-        private async UniTaskVoid Initialize()
+        private async UniTask Initialize()
         {
             var response = await EverestClient.RetrieveCountForDayAsync();
 

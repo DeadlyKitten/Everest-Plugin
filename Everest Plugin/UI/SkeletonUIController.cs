@@ -32,7 +32,7 @@ namespace Everest.UI
 
         private Dictionary<Skeleton, SkeletonNametag> _activeTextElements = new();
 
-        private void Awake()
+        private async UniTaskVoid Awake()
         {
             EverestPlugin.LogInfo("Initializing Skeleton UI Controller...");
 
@@ -41,7 +41,7 @@ namespace Everest.UI
             _maxDistanceSquared = _maxDistance * _maxDistance;
             _minDistanceSquared = _minDistance * _minDistance;
 
-            PrepareUI().Forget();
+            await PrepareTemplateNametag();
 
             _nametagPool = new(
                 CreateTextObject,
@@ -118,7 +118,7 @@ namespace Everest.UI
             }
         }
 
-        private async UniTaskVoid PrepareUI()
+        private async UniTask PrepareTemplateNametag()
         {
             var canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;

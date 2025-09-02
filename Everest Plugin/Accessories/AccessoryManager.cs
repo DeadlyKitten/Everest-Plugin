@@ -12,7 +12,7 @@ namespace Everest.Accessories
     {
         private static Dictionary<string, SkeletonAccessory> _accessories = new Dictionary<string, SkeletonAccessory>();
 
-        public static async UniTaskVoid Initialize()
+        public static async UniTask Initialize()
         {
             EverestPlugin.LogInfo("Initializing Accessory Manager...");
 

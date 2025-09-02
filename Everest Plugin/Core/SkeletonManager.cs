@@ -240,7 +240,7 @@ namespace Everest.Core
             _positionsBuffer.SetData(positions);
         }
 
-        public static async UniTaskVoid LoadComputeShaderAsync()
+        public static async UniTask LoadComputeShaderAsync()
         {
             EverestPlugin.LogInfo("Loading compute shader...");
 
@@ -254,26 +254,30 @@ namespace Everest.Core
 
             var assetBundle = await AssetBundle.LoadFromStreamAsync(stream);
 
-            var request = assetBundle.LoadAssetAsync("Assets/Everest/distancethreshold.compute");
-            await UniTask.WaitUntil(() => request.isDone);
+            var asset = await assetBundle.LoadAssetAsync("Assets/Everest/distancethreshold.compute").ToUniTask();
 
-            _distanceCheckShader = request.asset as ComputeShader;
+            _distanceCheckShader = asset as ComputeShader;
 
-            EverestPlugin.LogDebug($"Compute Shader prefab loaded: {_distanceCheckShader != null}");
+            await assetBundle.UnloadAsync(false).ToUniTask();
 
             EverestPlugin.LogInfo($"Compute Shader prefab loaded: {_distanceCheckShader != null}");
         }
 
-        public static async UniTaskVoid LoadSkeletonPrefabAsync()
+        public static async UniTask LoadSkeletonPrefabAsync()
         {
             EverestPlugin.LogInfo("Loading skeleton prefab...");
 
-            if (_skeletonPrefab == null)
+            var skeletonObject = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
+
+            if (skeletonObject == null)
             {
                 EverestPlugin.LogError("Skeleton prefab not found in Resources.");
                 ToastController.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
                 return;
             }
+
+            _skeletonPrefab = Instantiate(skeletonObject).AddComponent<Skeleton>();
+            DontDestroyOnLoad(_skeletonPrefab);
 
             foreach (var sfx in _skeletonPrefab.GetComponentsInChildren<SFX_PlayOneShot>())
             {
@@ -281,9 +285,10 @@ namespace Everest.Core
             }
         }
 
-        private async UniTask PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
-        {
+            _skeletonPrefab.gameObject.SetActive(false);
+
             EverestPlugin.LogInfo($"Skeleton prefab loaded: {_skeletonPrefab != null}");
+        }
 
             for (int boneIndex = 0; boneIndex < 18; boneIndex++)
             {
