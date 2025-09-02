@@ -1,11 +1,10 @@
-﻿using System.Net;
-using System.Net.Http;
-using System.Text;
+﻿using System.Text;
 using Cysharp.Threading.Tasks;
 using Everest.Core;
 using Everest.UI;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Everest.Api
 {
@@ -16,8 +15,6 @@ namespace Everest.Api
 #else
         private const string SERVER_BASE_URL = "https://peak-everest.com/api/v2";
 #endif
-
-        private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
 
         public static async UniTaskVoid SubmitDeathAsync(SubmissionRequest request)
         {
@@ -69,44 +66,52 @@ namespace Everest.Api
 
         private static async UniTask<T> GetAsync<T>(string endpoint, bool bailOnFail = true)
         {
-            var response = await _httpClient.GetAsync($"{SERVER_BASE_URL}{endpoint}");
+            using var downloadHandler = new DownloadHandlerBuffer();
+            using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "GET", downloadHandler, null);
 
-            if (response.StatusCode != HttpStatusCode.OK)
+            _ = unityWebRequest.SendWebRequest();
+            await UniTask.WaitUntil(() => unityWebRequest.isDone);
+
+            if (unityWebRequest.result != UnityWebRequest.Result.Success)
             {
-                EverestPlugin.LogError($"Server responded with status code {response.StatusCode}");
-                if (response.StatusCode == (HttpStatusCode)521)
+                EverestPlugin.LogError($"Server responded with status code {unityWebRequest.responseCode}");
+                if (unityWebRequest.responseCode == 521)
                 {
                     EverestPlugin.LogError("Everest server is offline. Please try again later.");
                     return default;
                 }
-                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(await response.Content.ReadAsStringAsync()).error);
+                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(downloadHandler.text).message);
                 if (bailOnFail) return default;
             }
 
-            return await UniTask.RunOnThreadPool(async () => JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync()));
+            return await UniTask.RunOnThreadPool(() => JsonConvert.DeserializeObject<T>(downloadHandler.text));
         }
 
         private static async UniTask<T> PostAsync<T>(string endpoint, string requestPayload)
         {
+            using var downloadHandler = new DownloadHandlerBuffer();
+            using var uploadHandler = new UploadHandlerRaw(Encoding.ASCII.GetBytes(requestPayload));
+            using var unityWebRequest = new UnityWebRequest($"{SERVER_BASE_URL}{endpoint}", "POST", downloadHandler, uploadHandler);
 
-            var response = await _httpClient.PostAsync($"{SERVER_BASE_URL}{endpoint}", 
-                new StringContent(requestPayload, Encoding.UTF8, "application/json"));
+            uploadHandler.contentType = "application/json";
 
+            _ = unityWebRequest.SendWebRequest();
+            await UniTask.WaitUntil(() => unityWebRequest.isDone);
 
-            if (response.StatusCode != HttpStatusCode.OK)
+            if (unityWebRequest.result != UnityWebRequest.Result.Success)
             {
-                EverestPlugin.LogError($"Server responded with status code {response.StatusCode}");
-                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(await response.Content.ReadAsStringAsync()).error);
+                EverestPlugin.LogError($"Server responded with status code {unityWebRequest.responseCode}");
+                EverestPlugin.LogError(JsonConvert.DeserializeObject<ErrorResponse>(downloadHandler.text).message);
 
-                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                if (unityWebRequest.responseCode == 429)
                 {
-                    var timeToWait = response.Headers.RetryAfter.Delta.Value.Seconds;
+                    var timeToWait = unityWebRequest.GetResponseHeader("Retry-After");
                     ToastController.Instance.Toast($"You are being rate limited. Please wait {timeToWait} seconds before dying again.", Color.red, 3f, 2f);
                     return default;
                 }
             }
 
-            return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<T>(downloadHandler.text);
         }
     }
 }
