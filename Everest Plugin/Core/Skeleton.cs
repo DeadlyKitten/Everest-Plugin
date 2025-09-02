@@ -38,15 +38,14 @@ namespace Everest.Core
             Nickname = data.nickname;
             gameObject.name = Nickname;
             Timestamp = DateTime.Parse(data.timestamp);
-            await TryAddAccessory(data.steam_id);
+            TryAddAccessory(data.steam_id);
         }
 
-        private async UniTask TryAddAccessory(string steamId)
+        private void TryAddAccessory(string steamId)
         {
             if (string.IsNullOrEmpty(steamId)) return;
 
-            var accessoryResult = await AccessoryManager.TryGetAccessoryForSteamId(steamId);
-            if (accessoryResult.success)
+            if (AccessoryManager.TryGetAccessoryForSteamId(steamId, out var accessory))
             {
                 var accessory = accessoryResult.accessory;
                 accessory.transform.SetParent(transform.FindChildRecursive(accessory.bone));

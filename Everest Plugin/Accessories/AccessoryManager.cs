@@ -50,21 +50,23 @@ namespace Everest.Accessories
             EverestPlugin.LogDebug($"AssetBundleManager initialized in {stopwatch.ElapsedMilliseconds} ms with {_accessories.Count} accessories loaded.");
         }
 
-        public static async UniTask<(bool success, SkeletonAccessory accessory)> TryGetAccessoryForSteamId(string steamId)
+        public static bool TryGetAccessoryForSteamId(string steamId, out SkeletonAccessory accessory)
         {
+            accessory = null;
+
             if (_accessories.TryGetValue(steamId, out var prefab))
             {
-                var instance = (await UnityEngine.Object.InstantiateAsync(prefab)).FirstOrDefault();
-                if (instance == null)
+                accessory = UnityEngine.Object.Instantiate(prefab);
+                if (accessory == null)
                 {
                     EverestPlugin.LogError($"Failed to instantiate accessory for Steam ID {steamId}.");
-                    return (false, null);
+                    return false;
                 }
                 EverestPlugin.LogDebug($"Successfully instantiated accessory for Steam ID {steamId}.");
-                return (true, instance);
+                return true;
             }
 
-            return (false, null);
+            return false;
         }
     }
 }
