@@ -16,6 +16,10 @@ using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.SceneManagement;
 
+#if DEBUG
+using UnityEngine.InputSystem;
+#endif
+
 namespace Everest
 {
     [BepInPlugin("com.steven.peak.everest", "Everest", "1.2.1")]
