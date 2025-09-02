@@ -22,7 +22,7 @@ using UnityEngine.InputSystem;
 
 namespace Everest
 {
-    [BepInPlugin("com.steven.peak.everest", "Everest", "1.2.1")]
+    [BepInPlugin("com.steven.peak.everest", "Everest", "1.3.0")]
     public class EverestPlugin : BaseUnityPlugin
     {
         public static EverestPlugin Instance;
