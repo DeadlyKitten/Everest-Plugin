@@ -32,7 +32,9 @@ namespace Everest.UI
 
         private void Update()
         {
-            if (_timeSinceLastUpdate >= 1f && ConfigHandler.ShowTimeSinceDeath)
+            if (!ConfigHandler.ShowTimeSinceDeath) return;
+
+            if (_timeSinceLastUpdate >= 1f)
             {
                 UpdateText();
                 _timeSinceLastUpdate = 0f;
@@ -46,12 +48,12 @@ namespace Everest.UI
             builder.AppendLine(_nickname);
 
             if (ConfigHandler.ShowTimeSinceDeath)
-                builder.Append($"Died {CreateFormatedTime(_timestamp)} ago");
+                builder.Append($"Died {CreateFormattedTime(_timestamp)} ago");
 
             _text.text = builder.ToString();
         }
 
-        private string CreateFormatedTime(DateTime timestamp)
+        private string CreateFormattedTime(DateTime timestamp)
         {
             TimeSpan elapsed = DateTime.UtcNow - timestamp;
 
