@@ -22,7 +22,7 @@ namespace Everest.Core
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string _serverResponseIdentifier;
 
-        private static GameObject _skeletonPrefab;
+        private static Skeleton _skeletonPrefab;
 
         private static ComputeShader _distanceCheckShader;
         private int _kernelIndex;
@@ -32,7 +32,7 @@ namespace Everest.Core
         private HashSet<uint> _objectsInRange = new HashSet<uint>();
         private HashSet<uint> _objectsInRangeLastIteration = new HashSet<uint>();
         private CullableSkeleton[] _skeletons;
-        private IObjectPool<Skeleton> _skeletonPool;
+        private SkeletonPool _skeletonPool;
 
         private float _elapsedTime = -2f;
         private bool _initialized = false;
@@ -390,34 +390,7 @@ namespace Everest.Core
             });
         }
 
-        private void PrepareSkeletonPool()
-        {
-            _skeletonPool = new ObjectPool<Skeleton>(CreateSkeleton, GetSkeleton, ReleaseSkeleton, DestroySkeleton, false, 10, 100);
-        }
-
-        private Skeleton CreateSkeleton()
-        {
-            var skeletonObject = Instantiate(_skeletonPrefab);
-            skeletonObject.SetActive(false);
-            skeletonObject.transform.SetParent(transform);
-            return skeletonObject.AddComponent<Skeleton>();
-        }
-
-        private void GetSkeleton(Skeleton skeleton)
-        {
-            skeleton.gameObject.SetActive(true);
-        }
-
-        private void ReleaseSkeleton(Skeleton skeleton)
-        {
-            skeleton.RemoveAccessories();
-            skeleton.gameObject.SetActive(false);
-        }
-
-        private void DestroySkeleton(Skeleton skeleton)
-        {
-            Destroy(skeleton.gameObject);
-        }
+        private void PrepareSkeletonPool() => _skeletonPool = new SkeletonPool(_skeletonPrefab, transform);
 
         private struct CullableSkeleton
         {
