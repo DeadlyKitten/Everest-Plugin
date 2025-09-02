@@ -23,12 +23,12 @@ namespace Everest.UI
 
         private void Start()
         {
-            EverestPlugin.LogDebug("Initializing UI...");
+            EverestPlugin.LogInfo("Initializing Toast Controller...");
 
             var canvas = new GameObject("canvas").AddComponent<Canvas>();
             canvas.transform.SetParent(transform);
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = short.MaxValue; // Ensure it's on top of other UI elements
+            canvas.sortingOrder = short.MaxValue;
             canvas.gameObject.AddComponent<CanvasScaler>();
 
             var textGO = new GameObject("text");
@@ -46,7 +46,7 @@ namespace Everest.UI
             textMesh.fontSizeMin = 26;
             textMesh.fontSizeMax = 26;
 
-            EverestPlugin.LogDebug("UI Initialized!");
+            EverestPlugin.LogInfo("Toast Controller Initialized!");
 
             FindFontEventually().Forget();
         }

@@ -47,9 +47,11 @@ namespace Everest.Core
             }
 
             _deathCountText.text = $"{response.count:n0}";
+            EverestPlugin.LogInfo($"Today's death tally: {_deathCountText.text}");
 
             var dateTime = DateTimeOffset.Parse(response.start_time_utc, CultureInfo.InvariantCulture);
             _dateText.text = dateTime.ToString("MMMM dd, yyyy", CultureInfo.InvariantCulture);
+            EverestPlugin.LogInfo($"Today's date: {_dateText.text}");
         }
 #endif
     }

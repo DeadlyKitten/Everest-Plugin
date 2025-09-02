@@ -15,6 +15,8 @@ namespace Everest.Patches
         {
             if (__instance != Character.localCharacter) return;
 
+            EverestPlugin.LogInfo("Whoops, you died!");
+
             var steamId = GetSteamId();
             var authTicket = GetAuthTicket();
             var mapId = GetMapId();

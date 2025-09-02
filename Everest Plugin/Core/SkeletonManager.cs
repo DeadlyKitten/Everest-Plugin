@@ -45,14 +45,14 @@ namespace Everest.Core
         {
             if (ConfigHandler.MaxSkeletons <= 0)
             {
-                EverestPlugin.LogInfo("Number of skeletons is set to 0 in the configuration. Exiting...");
+                EverestPlugin.LogWarning("Number of skeletons is set to 0 in the configuration. Exiting...");
                 DestroyImmediate(gameObject);
                 return;
             }
 
             if (_skeletonPrefab == null)
             {
-                EverestPlugin.LogDebug("Skeleton prefab not set. Not spawning skeletons.");
+                EverestPlugin.LogError("Skeleton prefab not set. Not spawning skeletons.");
                 DestroyImmediate(gameObject);
                 return;
             }
@@ -65,9 +65,9 @@ namespace Everest.Core
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            EverestPlugin.LogDebug("Waiting to establish connection to room...");
+            EverestPlugin.LogInfo("Waiting to establish connection to room...");
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
-            EverestPlugin.LogDebug($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
+            EverestPlugin.LogInfo($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
 
             _skeletons = (await GetSkeletonDataAsync()).Select(Skeleton => new CullableSkeleton(Skeleton)).ToArray();
 
@@ -77,7 +77,7 @@ namespace Everest.Core
                 ToastController.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
                 return;
             }
-            EverestPlugin.LogDebug($"Received {_skeletons.Length} skeletons.");
+            EverestPlugin.LogInfo($"Received {_skeletons.Length} skeletons.");
 
             _totalSkeletonCount = Math.Min(ConfigHandler.MaxSkeletons, _skeletons.Length);
             
@@ -242,6 +242,8 @@ namespace Everest.Core
 
         public static async UniTaskVoid LoadComputeShaderAsync()
         {
+            EverestPlugin.LogInfo("Loading compute shader...");
+
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Everest.Resources.computeshader.bundle");
 
             if (stream == null)
@@ -259,12 +261,12 @@ namespace Everest.Core
 
             EverestPlugin.LogDebug($"Compute Shader prefab loaded: {_distanceCheckShader != null}");
 
-            await assetBundle.UnloadAsync(false).ToUniTask();
+            EverestPlugin.LogInfo($"Compute Shader prefab loaded: {_distanceCheckShader != null}");
         }
 
         public static async UniTaskVoid LoadSkeletonPrefabAsync()
         {
-            _skeletonPrefab = await Resources.LoadAsync<GameObject>("Skeleton") as GameObject;
+            EverestPlugin.LogInfo("Loading skeleton prefab...");
 
             if (_skeletonPrefab == null)
             {
@@ -281,7 +283,7 @@ namespace Everest.Core
 
         private async UniTask PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
         {
-            skeleton.transform.SetPositionAndRotation(skeletonData.global_position, Quaternion.Euler(skeletonData.global_rotation));
+            EverestPlugin.LogInfo($"Skeleton prefab loaded: {_skeletonPrefab != null}");
 
             for (int boneIndex = 0; boneIndex < 18; boneIndex++)
             {
@@ -291,7 +293,7 @@ namespace Everest.Core
                 {
                     if (Vector3.Distance(skeleton.Bones[boneIndex].position, TombstoneHandler.TombstonePosition) < 1f)
                     {
-                        EverestPlugin.LogWarning("Skeleton position is too close to tombstone, skipping skeleton.");
+                EverestPlugin.LogDebug("Skeleton position is too close to tombstone, skipping skeleton.");
                         skeleton.gameObject.SetActive(false);
                         return;
                     }
@@ -303,7 +305,7 @@ namespace Everest.Core
 
                         if (!colliders.Any())
                         {
-                            EverestPlugin.LogWarning("Skeleton is in midair! Skipping skeleton.");
+                    EverestPlugin.LogDebug("Skeleton is in midair! Skipping skeleton.");
                             skeleton.gameObject.SetActive(false);
                             return;
                         }
@@ -327,7 +329,7 @@ namespace Everest.Core
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsHostAsync()
         {
-            EverestPlugin.LogDebug("Retrieving skeleton data as host...");
+            EverestPlugin.LogInfo("Retrieving skeleton data as host...");
 
             var mapId = GameHandler.GetService<NextLevelService>().Data.Value.CurrentLevelIndex;
             var serverResponse = await EverestClient.RetrieveAsync(mapId);
@@ -344,7 +346,7 @@ namespace Everest.Core
 
         private async UniTask<SkeletonData[]> RetrieveSkeletonDatasAsClientAsync()
         {
-            EverestPlugin.LogDebug("Retrieving skeleton data as client...");
+            EverestPlugin.LogInfo("Retrieving skeleton data as client...");
 
             var attempts = 0;
 
@@ -365,7 +367,7 @@ namespace Everest.Core
                 return await RetrieveSkeletonDatasAsHostAsync();
             }
 
-            EverestPlugin.LogDebug($"Received identifier UUID from host: {_serverResponseIdentifier}");
+            EverestPlugin.LogInfo($"Received identifier UUID from host: {_serverResponseIdentifier}");
 
             var serverResponse = await EverestClient.RetrieveAsync(_serverResponseIdentifier);
 
@@ -374,7 +376,7 @@ namespace Everest.Core
 
         private void SyncServerResponseIdentifier(string identifier)
         {
-            EverestPlugin.LogDebug($"Syncing server response identifier: {identifier}");
+            EverestPlugin.LogInfo($"Syncing server response identifier: {identifier}");
             _serverResponseIdentifier = identifier;
 
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable

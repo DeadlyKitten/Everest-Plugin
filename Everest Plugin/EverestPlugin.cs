@@ -26,6 +26,9 @@ namespace Everest
         {
             Instance = this;
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             ConfigHandler.Initialize();
 
             if (!ConfigHandler.Enabled)
@@ -63,7 +66,8 @@ namespace Everest
             AccessoryManager.Initialize().Forget();
             TombstoneHandler.Initialize().Forget();
 
-            LogInfo("Everest Initialized");
+            stopwatch.Stop();
+            LogInfo($"Everest Initialized in {stopwatch.ElapsedMilliseconds / 1000f} seconds.");
         }
 
 #if DEBUG
@@ -89,9 +93,15 @@ namespace Everest
 
             if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
             {
+                LogInfo("Game scene loaded. Spawning Skeleton Manager...");
+
                 new GameObject("Skeleton Manager").AddComponent<SkeletonManager>();
 
-                if (ConfigHandler.ShowSkeletonNametags) new GameObject("Skeleton UI Manager").AddComponent<SkeletonUIController>();
+                if (ConfigHandler.ShowSkeletonNametags)
+                {
+                    LogInfo("Spawning Skeleton UI Controller...");
+                    new GameObject("Skeleton UI Controller").AddComponent<SkeletonUIController>();
+                }
             }
         }
 
@@ -100,12 +110,22 @@ namespace Everest
             LogWarning(Info.Metadata.Version.ToString());
             var serverStatus = await EverestClient.RetrieveServerStatusAsync(Info.Metadata.Version.ToString());
 
+            LogInfo($"Everest Server Status: {serverStatus?.status ?? "offline"}");
+
             var message = new StringBuilder();
             message.AppendLine($"Everest Server Status: {serverStatus?.status ?? "offline"}");
+
             if (!string.IsNullOrEmpty(serverStatus?.messageOfTheDay))
+            {
+                LogInfo($"Message of the Day: {serverStatus.messageOfTheDay}");
                 message.AppendLine(serverStatus.messageOfTheDay);
+            }
+
             if (!string.IsNullOrEmpty(serverStatus?.updateInfo))
+            {
+                LogInfo($"Update available: {serverStatus.updateInfo}");
                 message.AppendLine(serverStatus.updateInfo);
+            }
 
             var color = serverStatus.status == "online" ? string.IsNullOrEmpty(serverStatus.updateInfo) ? Color.green : Color.yellow : Color.red;
 

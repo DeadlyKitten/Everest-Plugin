@@ -21,6 +21,8 @@ namespace Everest.Api
 
         public static async UniTaskVoid SubmitDeathAsync(SubmissionRequest request)
         {
+            EverestPlugin.LogInfo("Submitting death...");
+
             var endpoint = $"/Skeletons/submit";
             var payload = JsonConvert.SerializeObject(request);
             var response = await PostAsync<SubmissionResponse>(endpoint, payload);
@@ -34,6 +36,8 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(int mapId)
         {
+            EverestPlugin.LogInfo("Retrieving skeletons by map ID...");
+
             var maxSkeletons = ConfigHandler.MaxSkeletons;
             var excludeCrashSite = ConfigHandler.ExcludeNearCrashSite;
             var excludeCampfires = ConfigHandler.ExcludeNearCampfires;
@@ -44,18 +48,21 @@ namespace Everest.Api
 
         public static async UniTask<ServerResponse> RetrieveAsync(string identifier)
         {
+            EverestPlugin.LogInfo("Retrieving skeletons by identifier...");
             var endpoint = $"/Skeletons/recent/{identifier}";
             return await GetAsync<ServerResponse>(endpoint);
         }
 
         public static async UniTask<DailyCountResponse> RetrieveCountForDayAsync()
         {
+            EverestPlugin.LogInfo("Retrieving daily count...");
             var endpoint = "/Stats/daily/submissions";
             return await GetAsync<DailyCountResponse>(endpoint);
         }
 
         public static async UniTask<ServerStatusResponse> RetrieveServerStatusAsync(string version)
         {
+            EverestPlugin.LogInfo("Retrieving server status...");
             var endpoint = $"/Status?clientVersion={version}";
             return await GetAsync<ServerStatusResponse>(endpoint, false);
         }

@@ -18,6 +18,8 @@ namespace Everest.Core
 
         public static async UniTaskVoid Initialize()
         {
+            EverestPlugin.LogInfo("Initializing Tombstone Handler...");
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -36,14 +38,14 @@ namespace Everest.Core
 
             _tombstone = request.asset as GameObject;
 
-            EverestPlugin.LogDebug($"Tombstone prefab loaded: {_tombstone != null}");
+            EverestPlugin.LogInfo($"Tombstone prefab loaded: {_tombstone != null}");
 
             await assetBundle.UnloadAsync(false).ToUniTask();
 
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
 
             stopwatch.Stop();
-            EverestPlugin.LogDebug($"TombstoneManager initialized in {stopwatch.ElapsedMilliseconds} ms.");
+            EverestPlugin.LogInfo($"TombstoneHandler initialized in {stopwatch.ElapsedMilliseconds} ms.");
         }
 
         private static void OnActiveSceneChanged(Scene oldScene, Scene newScene)

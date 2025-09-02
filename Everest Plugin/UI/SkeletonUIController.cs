@@ -34,6 +34,8 @@ namespace Everest.UI
 
         private void Awake()
         {
+            EverestPlugin.LogInfo("Initializing Skeleton UI Controller...");
+
             _playerCamera = Camera.main;
 
             _maxDistanceSquared = _maxDistance * _maxDistance;
@@ -49,6 +51,8 @@ namespace Everest.UI
                 false,
                 5, 20
             );
+
+            EverestPlugin.LogInfo("Skeleton UI Controller Initialized!");
         }
 
         private void LateUpdate()

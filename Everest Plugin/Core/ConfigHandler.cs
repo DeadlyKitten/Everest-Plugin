@@ -83,13 +83,33 @@ namespace Everest.Core
 
             EverestPlugin.LogInfo("Configuration loaded successfully.");
             EverestPlugin.LogInfo($"Enabled: {Enabled}");
-            EverestPlugin.LogInfo(message: $"Max Skeletons: {MaxSkeletons}");
+
+            if (!Enabled) return;
+
+            EverestPlugin.LogInfo($"Max Skeletons: {MaxSkeletons}");
             EverestPlugin.LogInfo($"Allow Uploads: {AllowUploads}");
             EverestPlugin.LogInfo($"Hide Floaters: {HideFloaters}");
-            EverestPlugin.LogInfo($"Show Toasts: {ShowToasts}");
+            EverestPlugin.LogInfo($"Exclude Near Crash Site: {ExcludeNearCrashSite}");
+            EverestPlugin.LogInfo($"Exclude Near Campfires: {ExcludeNearCampfires}");
             EverestPlugin.LogInfo($"Skeleton Draw Distance: {SkeletonDrawDistance}");
             EverestPlugin.LogInfo($"Culling Update Frequency: {CullingUpdateFrequency} seconds");
             EverestPlugin.LogInfo($"Max Visible Skeletons: {maxVisibleSkeletons.Value}");
+            EverestPlugin.LogInfo($"Show Toasts: {ShowToasts}");
+            EverestPlugin.LogInfo($"Show Skeleton Nametags: {ShowSkeletonNametags}");
+
+            if (ShowSkeletonNametags)
+            {
+                EverestPlugin.LogInfo($"Show Time Since Death: {ShowTimeSinceDeath}");
+                EverestPlugin.LogInfo($"Show Seconds Always: {ShowSecondsAlways}");
+                EverestPlugin.LogInfo($"Max Distance For Visible Nametag: {MaxDistanceForVisibleNametag}");
+                EverestPlugin.LogInfo($"Min Distance For Visible Nametag: {MinDistanceForVisibleNametag}");
+                EverestPlugin.LogInfo($"Max Angle For Visible Nametag: {MaxAngleForVisibleNametag}");
+                EverestPlugin.LogInfo($"Max Nametag Size: {MaxNametagSize}");
+                EverestPlugin.LogInfo($"Min Nametag Size: {MinNametagSize}");
+                EverestPlugin.LogInfo($"Nametag Color: {NametagColor}");
+                EverestPlugin.LogInfo($"Nametag Outline Width: {NametagOutlineWidth}");
+                EverestPlugin.LogInfo($"Nametag Outline Color: {NametagOutlineColor}");
+            }
         }
     }
 }

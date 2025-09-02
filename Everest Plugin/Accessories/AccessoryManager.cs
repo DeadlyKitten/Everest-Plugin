@@ -14,6 +14,8 @@ namespace Everest.Accessories
 
         public static async UniTaskVoid Initialize()
         {
+            EverestPlugin.LogInfo("Initializing Accessory Manager...");
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -47,7 +49,7 @@ namespace Everest.Accessories
             await assetBundle.UnloadAsync(false);
 
             stopwatch.Stop();
-            EverestPlugin.LogDebug($"AssetBundleManager initialized in {stopwatch.ElapsedMilliseconds} ms with {_accessories.Count} accessories loaded.");
+            EverestPlugin.LogInfo($"AccessoryManager initialized in {stopwatch.ElapsedMilliseconds} ms with {_accessories.Count} accessories loaded.");
         }
 
         public static bool TryGetAccessoryForSteamId(string steamId, out SkeletonAccessory accessory)
