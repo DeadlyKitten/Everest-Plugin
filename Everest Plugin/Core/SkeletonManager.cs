@@ -37,7 +37,6 @@ namespace Everest.Core
         private float _elapsedTime = -2f;
         private bool _initialized = false;
         private bool _isCulling = false;
-        private Stopwatch _cullLoopTimer = new Stopwatch();
 
         private int _totalSkeletonCount;
 
@@ -56,8 +55,6 @@ namespace Everest.Core
                 DestroyImmediate(gameObject);
                 return;
             }
-
-            EverestPlugin.LogDebug("Skeleton Manager Initializing...");
         }
 
         private async void Start()
@@ -117,17 +114,13 @@ namespace Everest.Core
             _isCulling = true;
 
             _distanceCheckShader.SetVector("_PlayerPosition", Camera.main.transform.position);
-
             _resultsBuffer.SetCounterValue(0);
-
             _distanceCheckShader.Dispatch(_kernelIndex, Mathf.CeilToInt(_totalSkeletonCount / 256f), 1, 1);
-
             var resultsCount = await GetResultCountAsync();
 
             if (resultsCount == 0)
             {
-                _objectsInRange.Clear();
-                await ProcessCullingResults();
+                ProcessCullingResults();
                 _isCulling = false;
                 return;
             }
@@ -141,65 +134,44 @@ namespace Everest.Core
                 return;
             }
 
-            var _results = request.GetData<DistanceCullingResult>().ToArray();
-            _objectsInRange.Clear();
-
-            Array.Sort(_results);
-
+            var results = request.GetData<DistanceCullingResult>().ToArray();
+            Array.Sort(results);
             var count = Math.Min(resultsCount, ConfigHandler.MaxVisibleSkeletons);
+            _objectsInRange.UnionWith(results.Take(count).Select(x => x.index));
 
-            for (int i = 0; i < count; i++)
-            {
-                _objectsInRange.Add(_results[i].index);
-            }
+            ProcessCullingResults();
 
-            await ProcessCullingResults();
-
+            _objectsInRange.Clear();
             _isCulling = false;
         }
 
-        private async UniTask ProcessCullingResults()
+        private void ProcessCullingResults()
         {
-            _cullLoopTimer.Restart();
-
             if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
                 return;
 
+            var toDisable = _objectsInRangeLastIteration.Except(_objectsInRange);
+            foreach (var index in toDisable)
+            {
+                if (_skeletons[index].Instance != null)
+                {
+                    _skeletonPool.Release(_skeletons[index].Instance);
+                    _skeletons[index].Instance = null;
+                }
+            }
+
+            var toEnable = _objectsInRange.Except(_objectsInRangeLastIteration);
+            foreach (var index in toEnable)
+            {
+                if (_skeletons[index].Instance == null)
+                {
+                    _skeletons[index].Instance = _skeletonPool.Get();
+                    PrepareSkeleton(_skeletons[index].Data, _skeletons[index].Instance);
+                }
+            }
+
             _objectsInRangeLastIteration.Clear();
-            foreach (var index in _objectsInRange)
-            {
-                _objectsInRangeLastIteration.Add(index);
-            }
-
-            for (uint i = 0; i < _totalSkeletonCount; i++)
-            {
-                bool isInRange = _objectsInRange.Contains(i);
-
-                if (isInRange)
-                {
-                    if (_skeletons[i].Instance == null)
-                    {
-                        _skeletons[i].Instance = _skeletonPool.Get();
-                        await PrepareSkeleton(_skeletons[i].Data, _skeletons[i].Instance);
-                    }
-                }
-                else
-                {
-                    if (_skeletons[i].Instance != null)
-                    {
-                        _skeletonPool.Release(_skeletons[i].Instance);
-                        _skeletons[i].Instance = null;
-                    }
-                }
-
-                if (_cullLoopTimer.Elapsed.TotalMilliseconds >= 1)
-                {
-                    await UniTask.Yield();
-                    _cullLoopTimer.Restart();
-                }
-            }
-
-            _cullLoopTimer.Stop();
+            _objectsInRangeLastIteration.UnionWith(_objectsInRange);
         }
 
         private async UniTask<int> GetResultCountAsync()
@@ -272,7 +244,6 @@ namespace Everest.Core
             if (skeletonObject == null)
             {
                 EverestPlugin.LogError("Skeleton prefab not found in Resources.");
-                ToastController.Instance.Toast("Skeleton prefab not found in Resources.", Color.red, 5f, 3f);
                 return;
             }
 
@@ -283,42 +254,41 @@ namespace Everest.Core
             {
                 DestroyImmediate(sfx);
             }
-        }
 
             _skeletonPrefab.gameObject.SetActive(false);
 
             EverestPlugin.LogInfo($"Skeleton prefab loaded: {_skeletonPrefab != null}");
         }
 
-            for (int boneIndex = 0; boneIndex < 18; boneIndex++)
+        private void PrepareSkeleton(SkeletonData skeletonData, Skeleton skeleton)
+        {
+            var spawnPosition = SkeletonTransformHelper.GetHipWorldPosition(
+                skeletonData.global_position,
+                skeletonData.global_rotation,
+                skeletonData.bone_local_positions[0]
+            );
+
+            if (Vector3.Distance(spawnPosition, TombstoneHandler.TombstonePosition) < 1f)
             {
-                skeleton.Bones[boneIndex].SetLocalPositionAndRotation(skeletonData.bone_local_positions[boneIndex], Quaternion.Euler(skeletonData.bone_local_rotations[boneIndex]));
-
-                if (boneIndex == 0)
-                {
-                    if (Vector3.Distance(skeleton.Bones[boneIndex].position, TombstoneHandler.TombstonePosition) < 1f)
-                    {
                 EverestPlugin.LogDebug("Skeleton position is too close to tombstone, skipping skeleton.");
-                        skeleton.gameObject.SetActive(false);
-                        return;
-                    }
+                skeleton.gameObject.SetActive(false);
+                return;
+            }
 
-                    if (ConfigHandler.HideFloaters)
-                    {
-                        var layerMask = LayerMask.GetMask("Default", "Terrain", "Map");
-                        var colliders = Physics.OverlapSphere(skeleton.Bones[boneIndex].position, 1f, layerMask);
+            if (ConfigHandler.HideFloaters)
+            {
+                var layerMask = LayerMask.GetMask("Default", "Terrain", "Map");
+                var colliders = Physics.OverlapSphere(spawnPosition, 1f, layerMask);
 
-                        if (!colliders.Any())
-                        {
+                if (!colliders.Any())
+                {
                     EverestPlugin.LogDebug("Skeleton is in midair! Skipping skeleton.");
-                            skeleton.gameObject.SetActive(false);
-                            return;
-                        }
-                    }
+                    skeleton.gameObject.SetActive(false);
+                    return;
                 }
             }
 
-            await skeleton.Initialize(skeletonData);
+            skeleton.Initialize(skeletonData).Forget();
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonDataAsync()

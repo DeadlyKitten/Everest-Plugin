@@ -5,7 +5,9 @@ using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
 using Everest.Utilities;
+using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Jobs;
 using Zorro.Core;
 
 namespace Everest.Core
@@ -31,14 +33,39 @@ namespace Everest.Core
 
         private void OnEnable() => AllActiveSkeletons.Add(this);
 
-        private void OnDisable() => AllActiveSkeletons.Remove(this);
+        private void OnDisable()
+        {
+            RemoveAccessories();
+            AllActiveSkeletons.Remove(this);
+        }
 
-        public async UniTask Initialize(SkeletonData data)
+        public async UniTaskVoid Initialize(SkeletonData data)
         {
             Nickname = data.nickname;
             gameObject.name = Nickname;
             Timestamp = DateTime.Parse(data.timestamp);
             TryAddAccessory(data.steam_id);
+
+            transform.SetPositionAndRotation(data.global_position, Quaternion.Euler(data.global_rotation));
+
+            var positions = data.bone_local_positions.ToNativeArray(Allocator.TempJob);
+            var rotations = data.bone_local_rotations.ToNativeArray(Allocator.TempJob);
+
+            var job = new PoseSkeletonJob
+            {
+                Positions = positions,
+                Rotations = rotations
+            };
+
+            var transformAccessArray = new TransformAccessArray(Bones);
+
+            var handle = job.ScheduleByRef(transformAccessArray);
+
+            await UniTask.WaitUntil(() => handle.IsCompleted);
+
+            positions.Dispose();
+            rotations.Dispose();
+            transformAccessArray.Dispose();
         }
 
         private void TryAddAccessory(string steamId)
@@ -47,7 +74,6 @@ namespace Everest.Core
 
             if (AccessoryManager.TryGetAccessoryForSteamId(steamId, out var accessory))
             {
-                var accessory = accessoryResult.accessory;
                 accessory.transform.SetParent(transform.FindChildRecursive(accessory.bone));
                 accessory.transform.SetLocalPositionAndRotation(accessory.localPosition, accessory.localRotation);
                 accessory.transform.localScale = Vector3.one;
@@ -67,6 +93,20 @@ namespace Everest.Core
             }
 
             _accessories.Clear();
+        }
+
+        private struct PoseSkeletonJob : IJobParallelForTransform
+        {
+            public NativeArray<Vector3> Positions;
+            public NativeArray<Vector3> Rotations;
+
+            public void Execute(int index, TransformAccess transform)
+            {
+                transform.SetLocalPositionAndRotation(
+                    Positions[index], 
+                    Quaternion.Euler(Rotations[index])
+                );
+            }
         }
     }
 }
