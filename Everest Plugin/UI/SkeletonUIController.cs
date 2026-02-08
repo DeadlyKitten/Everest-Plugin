@@ -107,7 +107,7 @@ namespace Everest.UI
             var jobHandle = _job.ScheduleNative(count, 128);
 
             await UniTask.Yield(PlayerLoopTiming.PreLateUpdate);
-            if (this.destroyCancellationToken.IsCancellationRequested) return;
+            if (destroyCancellationToken.IsCancellationRequested) return;
             jobHandle.Complete();
 
             _activeSkeletonsThisFrame.Clear();

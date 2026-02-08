@@ -170,6 +170,7 @@ namespace Everest.Core
 
             var sortingJobHandle = _cullingResults.SortJob().Schedule(cullingJobHandle);
             await sortingJobHandle;
+            if (destroyCancellationToken.IsCancellationRequested) return;
             sortingJobHandle.Complete();
 
             var displayCount = 0;
