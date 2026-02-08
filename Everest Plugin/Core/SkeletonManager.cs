@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using Everest.Api;
+using Everest.Jobs;
 using Everest.UI;
 using Everest.Utilities;
 using ExitGames.Client.Photon;
 using Photon.Pun;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Pool;
-using UnityEngine.Rendering;
 
 namespace Everest.Core
 {
@@ -22,16 +21,20 @@ namespace Everest.Core
         private const string SERVER_RESPONSE_IDENTIFIER_KEY = "serverResponseIdentifier";
         private string _serverResponseIdentifier;
 
+        private Transform _playerCamera;
+
         private static Skeleton _skeletonPrefab;
 
-        private static ComputeShader _distanceCheckShader;
-        private int _kernelIndex;
-        private ComputeBuffer _countBuffer;
-        private ComputeBuffer _positionsBuffer;
-        private ComputeBuffer _resultsBuffer;
-        private HashSet<uint> _objectsInRange = new HashSet<uint>();
-        private HashSet<uint> _objectsInRangeLastIteration = new HashSet<uint>();
+        private CullingJobNative _cullingJob;
+
+        private NativeHashSet<int> _objectsInRange;
+        private NativeHashSet<int> _objectsInRangeLastIteration;
         private CullableSkeleton[] _skeletons;
+        private NativeArray<float> _skeletonPositionsX;
+        private NativeArray<float> _skeletonPositionsY;
+        private NativeArray<float> _skeletonPositionsZ;
+        private NativeArray<DistanceCullingResult> _cullingResults;
+        private float distanceThresholdSquared;
         private SkeletonPool _skeletonPool;
 
         private float _elapsedTime = -2f;
@@ -62,6 +65,8 @@ namespace Everest.Core
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            _playerCamera = Camera.main.transform;
+
             EverestPlugin.LogInfo("Waiting to establish connection to room...");
             await UniTask.WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
             EverestPlugin.LogInfo($"Connection established as {(PhotonNetwork.IsMasterClient ? "Host" : "Client")}.");
@@ -72,20 +77,66 @@ namespace Everest.Core
             {
                 EverestPlugin.LogWarning("No skeleton data found for this map.");
                 ToastController.Instance.Toast("No skeletons :(", Color.red, 5f, 3f);
+                DestroyImmediate(this.gameObject);
                 return;
             }
-            EverestPlugin.LogInfo($"Received {_skeletons.Length} skeletons.");
+            _totalSkeletonCount = _skeletons.Length;
 
-            _totalSkeletonCount = Math.Min(ConfigHandler.MaxSkeletons, _skeletons.Length);
+            EverestPlugin.LogInfo($"Received {_totalSkeletonCount} skeletons.");
             
-            PrepareBuffers();
-
             PrepareSkeletonPool();
+
+            _skeletonPositionsX = new NativeArray<float>(_totalSkeletonCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            _skeletonPositionsY = new NativeArray<float>(_totalSkeletonCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            _skeletonPositionsZ = new NativeArray<float>(_totalSkeletonCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
+            for (int i = 0; i < _totalSkeletonCount; i++)
+            {
+                var skeleton = _skeletons[i];
+
+                float3 pos = (float3)SkeletonTransformHelper.GetHipWorldPosition(
+                    skeleton.Data.global_position,
+                    skeleton.Data.global_rotation,
+                    skeleton.Data.bone_local_positions[0]
+                );
+
+                _skeletonPositionsX[i] = pos.x;
+                _skeletonPositionsY[i] = pos.y;
+                _skeletonPositionsZ[i] = pos.z;
+            }
+
+            _cullingResults = new NativeArray<DistanceCullingResult>(_totalSkeletonCount, Allocator.Persistent);
+            _objectsInRange = new NativeHashSet<int>(ConfigHandler.MaxVisibleSkeletons, Allocator.Persistent);
+            _objectsInRangeLastIteration = new NativeHashSet<int>(ConfigHandler.MaxVisibleSkeletons, Allocator.Persistent);
+
+            distanceThresholdSquared = Mathf.Pow(ConfigHandler.SkeletonDrawDistance, 2);
+
+            unsafe
+            {
+                _cullingJob = new CullingJobNative()
+                {
+                    SquaredDrawDistance = distanceThresholdSquared,
+                    SkeletonPositionsX = (float*)_skeletonPositionsX.GetUnsafeReadOnlyPtr(),
+                    SkeletonPositionsY = (float*)_skeletonPositionsY.GetUnsafeReadOnlyPtr(),
+                    SkeletonPositionsZ = (float*)_skeletonPositionsZ.GetUnsafeReadOnlyPtr(),
+                    Results = (DistanceCullingResult*)_cullingResults.GetUnsafePtr()
+                };
+            }
 
             _initialized = true;
 
             stopwatch.Stop();
             ToastController.Instance.Toast($"{_totalSkeletonCount} skeletons have been summoned! Took {stopwatch.ElapsedMilliseconds} ms.", Color.green, 5f, 3f);
+        }
+
+        private void OnDestroy()
+        {
+            _skeletonPositionsX.Dispose();
+            _skeletonPositionsY.Dispose();
+            _skeletonPositionsZ.Dispose();
+            _cullingResults.Dispose();
+            _objectsInRange.Dispose();
+            _objectsInRangeLastIteration.Dispose();
         }
 
         private void Update()
@@ -102,42 +153,34 @@ namespace Everest.Core
             HandleDistanceCullingAsync().Forget();
         }
 
-        private void OnDestroy()
-        {
-            _countBuffer?.Release();
-            _positionsBuffer?.Release();
-            _resultsBuffer?.Release();
-        }
-
         private async UniTaskVoid HandleDistanceCullingAsync()
         {
             _isCulling = true;
 
-            _distanceCheckShader.SetVector("_PlayerPosition", Camera.main.transform.position);
-            _resultsBuffer.SetCounterValue(0);
-            _distanceCheckShader.Dispatch(_kernelIndex, Mathf.CeilToInt(_totalSkeletonCount / 256f), 1, 1);
-            var resultsCount = await GetResultCountAsync();
+            var cameraPosition = _playerCamera.position;
 
-            if (resultsCount == 0)
+            if (Vector3.Distance(_cullingJob.CameraPosition, cameraPosition) < 0.1f)
             {
-                ProcessCullingResults();
                 _isCulling = false;
                 return;
             }
 
-            var request = await AsyncGPUReadback.Request(_resultsBuffer, resultsCount * Marshal.SizeOf(typeof(DistanceCullingResult)), 0);
+            _cullingJob.CameraPosition = cameraPosition;
+            var cullingJobHandle = _cullingJob.ScheduleNative(_totalSkeletonCount, 256);
 
-            if (request.hasError)
+            var sortingJobHandle = _cullingResults.SortJob().Schedule(cullingJobHandle);
+            await sortingJobHandle;
+            sortingJobHandle.Complete();
+
+            var displayCount = 0;
+            for (int i = 0; i < ConfigHandler.MaxVisibleSkeletons; i++)
             {
-                EverestPlugin.LogError("GPU Readback error");
-                _isCulling = false;
-                return;
-            }
+                if (_cullingResults[i].distance == float.MaxValue)
+                    break;
 
-            var results = request.GetData<DistanceCullingResult>().ToArray();
-            Array.Sort(results);
-            var count = Math.Min(resultsCount, ConfigHandler.MaxVisibleSkeletons);
-            _objectsInRange.UnionWith(results.Take(count).Select(x => x.index));
+                _objectsInRange.Add(_cullingResults[i].index);
+                displayCount++;
+            }
 
             ProcessCullingResults();
 
@@ -147,92 +190,40 @@ namespace Everest.Core
 
         private void ProcessCullingResults()
         {
-            if (_objectsInRange.SetEquals(_objectsInRangeLastIteration))
+            if (SetEquals(_objectsInRange, _objectsInRangeLastIteration))
                 return;
 
-            var toDisable = _objectsInRangeLastIteration.Except(_objectsInRange);
-            foreach (var index in toDisable)
+            foreach (var index in _objectsInRangeLastIteration)
             {
-                if (_skeletons[index].Instance != null)
+                if (!_objectsInRange.Contains(index) && _skeletons[index].Instance != null)
                 {
                     _skeletonPool.Release(_skeletons[index].Instance);
                     _skeletons[index].Instance = null;
                 }
             }
 
-            var toEnable = _objectsInRange.Except(_objectsInRangeLastIteration);
-            foreach (var index in toEnable)
+            foreach (var index in _objectsInRange)
             {
-                if (_skeletons[index].Instance == null)
+                if (!_objectsInRangeLastIteration.Contains(index) && _skeletons[index].Instance == null)
                 {
                     _skeletons[index].Instance = _skeletonPool.Get();
                     PrepareSkeleton(_skeletons[index].Data, _skeletons[index].Instance);
                 }
             }
 
-            _objectsInRangeLastIteration.Clear();
-            _objectsInRangeLastIteration.UnionWith(_objectsInRange);
+            (_objectsInRange, _objectsInRangeLastIteration) = (_objectsInRangeLastIteration, _objectsInRange);
         }
 
-        private async UniTask<int> GetResultCountAsync()
+        private bool SetEquals(NativeHashSet<int> a, NativeHashSet<int> b)
         {
-            ComputeBuffer.CopyCount(_resultsBuffer, _countBuffer, 0);
-            var request = await AsyncGPUReadback.Request(_countBuffer);
+            if (a.Count != b.Count) return false;
 
-            if (request.hasError)
+            foreach (var item in a)
             {
-                EverestPlugin.LogError("GPU count readback error.");
-                return 0;
+                if (!b.Contains(item)) return false;
             }
 
-            return request.GetData<int>()[0];
-        }
-
-        private void PrepareBuffers()
-        {
-            _kernelIndex = _distanceCheckShader.FindKernel("CSMain");
-
-            _distanceCheckShader.SetFloat("_Threshold", ConfigHandler.SkeletonDrawDistance);
-            _distanceCheckShader.SetInt("_TotalPositions", _totalSkeletonCount);
-
-            _countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-
-            _resultsBuffer = new ComputeBuffer(_totalSkeletonCount, Marshal.SizeOf(typeof(DistanceCullingResult)), ComputeBufferType.Append);
-            _distanceCheckShader.SetBuffer(_kernelIndex, "_Results", _resultsBuffer);
-
-            _positionsBuffer = new ComputeBuffer(_skeletons.Length, Marshal.SizeOf(typeof(Vector3)));
-            _distanceCheckShader.SetBuffer(_kernelIndex, "_Positions", _positionsBuffer);
-
-            var positions = _skeletons.Select(skeleton => SkeletonTransformHelper.GetHipWorldPosition(
-                skeleton.Data.global_position,
-                skeleton.Data.global_rotation,
-                skeleton.Data.bone_local_positions[0])
-            ).ToArray();
-
-            _positionsBuffer.SetData(positions);
-        }
-
-        public static async UniTask LoadComputeShaderAsync()
-        {
-            EverestPlugin.LogInfo("Loading compute shader...");
-
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Everest.Resources.computeshader.bundle");
-
-            if (stream == null)
-            {
-                EverestPlugin.LogError("Compute Shader AssetBundle not found in resources.");
-                return;
-            }
-
-            var assetBundle = await AssetBundle.LoadFromStreamAsync(stream);
-
-            var asset = await assetBundle.LoadAssetAsync("Assets/Everest/distancethreshold.compute").ToUniTask();
-
-            _distanceCheckShader = asset as ComputeShader;
-
-            await assetBundle.UnloadAsync(false).ToUniTask();
-
-            EverestPlugin.LogInfo($"Compute Shader prefab loaded: {_distanceCheckShader != null}");
+            return true;
         }
 
         public static async UniTask LoadSkeletonPrefabAsync()
@@ -288,7 +279,7 @@ namespace Everest.Core
                 }
             }
 
-            skeleton.Initialize(skeletonData).Forget();
+            skeleton.Initialize(skeletonData);
         }
 
         private async UniTask<SkeletonData[]> GetSkeletonDataAsync()
@@ -371,18 +362,6 @@ namespace Everest.Core
             {
                 Instance = null;
                 Data = data;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct DistanceCullingResult : IComparable<DistanceCullingResult>
-        {
-            public uint index;
-            public float distance;
-
-            public int CompareTo(DistanceCullingResult other)
-            {
-                return distance.CompareTo(other.distance);
             }
         }
     }

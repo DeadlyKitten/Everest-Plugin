@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Everest.Utilities
 {
@@ -11,18 +10,15 @@ namespace Everest.Utilities
         private static readonly Vector3 _armatureLocalPosition = Vector3.zero;
         private static readonly Quaternion _armatureLocalRotation = Quaternion.Euler(-90f, 0, 0);
 
+        private static Matrix4x4 scoutMatrix = Matrix4x4.TRS(_scoutLocalPosition, _scoutLocalRotation, _scoutLocalScale);
+        private static Matrix4x4 armatureMatrix = Matrix4x4.TRS(_armatureLocalPosition, _armatureLocalRotation, Vector3.one);
+        private static Matrix4x4 childMatrix = scoutMatrix * armatureMatrix;
+
         public static Vector3 GetHipWorldPosition(Vector3 parentWorldPosition, Vector3 parentWorldRotation, Vector3 hipLocalPosition)
         {
-            Matrix4x4 parentMatrix = Matrix4x4.TRS(parentWorldPosition, Quaternion.Euler(parentWorldRotation), Vector3.one);
-
-            Matrix4x4 scoutMatrix = Matrix4x4.TRS(_scoutLocalPosition, _scoutLocalRotation, _scoutLocalScale);
-
-            Matrix4x4 armatureMatrix = Matrix4x4.TRS(_armatureLocalPosition, _armatureLocalRotation, Vector3.one);
-
-            Matrix4x4 armatureWorldMatrix = parentMatrix * scoutMatrix * armatureMatrix;
-
-            Vector3 hipWorldPosition = armatureWorldMatrix.MultiplyPoint3x4(hipLocalPosition);
-
+            var parentMatrix = Matrix4x4.TRS(parentWorldPosition, Quaternion.Euler(parentWorldRotation), Vector3.one);
+            var armatureWorldMatrix = parentMatrix * childMatrix;
+            var hipWorldPosition = armatureWorldMatrix.MultiplyPoint3x4(hipLocalPosition);
             return hipWorldPosition;
         }
     }

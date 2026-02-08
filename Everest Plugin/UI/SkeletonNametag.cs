@@ -14,6 +14,7 @@ namespace Everest.UI
         private string _nickname;
         private DateTime _timestamp;
         private float _timeSinceLastUpdate;
+        private StringBuilder _stringBuilder = new();
 
         public void Initialize(string nickname, DateTime timestamp)
         {
@@ -44,13 +45,13 @@ namespace Everest.UI
 
         private void UpdateText()
         {
-            var builder = new StringBuilder();
-            builder.AppendLine(_nickname);
+            _stringBuilder.Clear();
+            _stringBuilder.AppendLine(_nickname);
 
             if (ConfigHandler.ShowTimeSinceDeath)
-                builder.Append($"Died {CreateFormattedTime(_timestamp)} ago");
+                _stringBuilder.Append($"Died {CreateFormattedTime(_timestamp)} ago");
 
-            _text.text = builder.ToString();
+            _text.text = _stringBuilder.ToString();
         }
 
         private string CreateFormattedTime(DateTime timestamp)

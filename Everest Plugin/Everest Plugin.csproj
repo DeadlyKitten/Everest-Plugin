@@ -7,6 +7,7 @@
     <LangVersion>9</LangVersion>
     <Version>1.3.0</Version>
     <Authors>Steven 🎀</Authors>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -49,8 +50,17 @@
     <Reference Include="UniTask">
       <HintPath>$(GameDir)\BepInEx\core\UniTask.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Burst">
+      <HintPath>D:\Unity Projects\Everest Accessories\Builds\Everest Accessories_Data\Managed\Unity.Burst.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Collections">
+      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.InputSystem">
       <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.InputSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>D:\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>$(GameDir)\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
@@ -89,7 +99,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\accessories.bundle" />
-    <EmbeddedResource Include="Resources\computeshader.bundle" />
     <EmbeddedResource Include="Resources\tombstone.bundle" />
   </ItemGroup>
 

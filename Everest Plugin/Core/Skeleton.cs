@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cysharp.Threading.Tasks;
 using Everest.Accessories;
 using Everest.Api;
 using Everest.Utilities;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Jobs;
 using Zorro.Core;
 
 namespace Everest.Core
@@ -39,33 +37,21 @@ namespace Everest.Core
             AllActiveSkeletons.Remove(this);
         }
 
-        public async UniTaskVoid Initialize(SkeletonData data)
+        public void Initialize(SkeletonData data)
         {
             Nickname = data.nickname;
             gameObject.name = Nickname;
             Timestamp = DateTime.Parse(data.timestamp);
             TryAddAccessory(data.steam_id);
 
-            transform.SetPositionAndRotation(data.global_position, Quaternion.Euler(data.global_rotation));
-
-            var positions = data.bone_local_positions.ToNativeArray(Allocator.TempJob);
-            var rotations = data.bone_local_rotations.ToNativeArray(Allocator.TempJob);
-
-            var job = new PoseSkeletonJob
+            for (var i = 0; i < Bones.Length; i++)
             {
-                Positions = positions,
-                Rotations = rotations
-            };
+                Bones[i].SetLocalPositionAndRotation(
+                    data.bone_local_positions[i],
+                    Quaternion.Euler(data.bone_local_rotations[i]));
+            }
 
-            var transformAccessArray = new TransformAccessArray(Bones);
-
-            var handle = job.ScheduleByRef(transformAccessArray);
-
-            await UniTask.WaitUntil(() => handle.IsCompleted);
-
-            positions.Dispose();
-            rotations.Dispose();
-            transformAccessArray.Dispose();
+            transform.SetPositionAndRotation(data.global_position, Quaternion.Euler(data.global_rotation));
         }
 
         private void TryAddAccessory(string steamId)
@@ -93,20 +79,6 @@ namespace Everest.Core
             }
 
             _accessories.Clear();
-        }
-
-        private struct PoseSkeletonJob : IJobParallelForTransform
-        {
-            public NativeArray<Vector3> Positions;
-            public NativeArray<Vector3> Rotations;
-
-            public void Execute(int index, TransformAccess transform)
-            {
-                transform.SetLocalPositionAndRotation(
-                    Positions[index], 
-                    Quaternion.Euler(Rotations[index])
-                );
-            }
         }
     }
 }
