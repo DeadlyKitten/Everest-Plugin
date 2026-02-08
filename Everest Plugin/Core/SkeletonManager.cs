@@ -159,7 +159,7 @@ namespace Everest.Core
 
             var cameraPosition = _playerCamera.position;
 
-            if (Vector3.Distance(_cullingJob.CameraPosition, cameraPosition) < 0.1f)
+            if (Vector3.Distance(_cullingJob.CameraPosition, cameraPosition) < ConfigHandler.CullingDistanceThreshold)
             {
                 _isCulling = false;
                 return;

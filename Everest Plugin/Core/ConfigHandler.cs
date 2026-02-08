@@ -19,6 +19,7 @@ namespace Everest.Core
         private static ConfigEntry<int> skeletonDrawDistance;
         private static ConfigEntry<float> cullingUpdateFrequency;
         private static ConfigEntry<int> maxVisibleSkeletons;
+        private static ConfigEntry<float> cullingDistanceThreshold;
 
         private static ConfigEntry<bool> showSkeletonNametags;
         private static ConfigEntry<bool> showTimeSinceDeath;
@@ -42,6 +43,7 @@ namespace Everest.Core
         public static int SkeletonDrawDistance => skeletonDrawDistance.Value;
         public static float CullingUpdateFrequency => cullingUpdateFrequency.Value;
         public static int MaxVisibleSkeletons => maxVisibleSkeletons.Value;
+        public static float CullingDistanceThreshold => cullingDistanceThreshold.Value;
         public static bool ShowSkeletonNametags => showSkeletonNametags.Value;
         public static bool ShowTimeSinceDeath => showTimeSinceDeath.Value;
         public static bool ShowSecondsAlways => showSecondsAlways.Value;
@@ -68,6 +70,7 @@ namespace Everest.Core
             skeletonDrawDistance = config.Bind("Performance", "SkeletonDrawDistance", 150, "Maximum distance (in units) at which skeletons are drawn.");
             cullingUpdateFrequency = config.Bind("Performance", "CullingUpdateFrequency", 1.0f, "Frequency (in seconds) at which the culling system updates. Lower values may improve responsiveness decrease performance.");
             maxVisibleSkeletons = config.Bind("Performance", "MaxVisibleSkeletons", 100, "Maximum number of skeletons that can be visible at once.");
+            cullingDistanceThreshold = config.Bind("Performance", "CullingDistanceThreshold", 1f, "Minimum distance to move between culling updates. Lower values may improve responsiveness decrease performance.");
             showToasts = config.Bind("UI", "ShowToasts", true, "Enable or disable toast notifications in the UI.");
             showSkeletonNametags = config.Bind("UI", "ShowSkeletonNametags", true, "Enable or disable skeleton nametags.");
             showTimeSinceDeath = config.Bind("UI", "ShowTimeSinceDeath", true, "Enable or disable showing the time since death in skeleton nametags.");
@@ -93,7 +96,8 @@ namespace Everest.Core
             EverestPlugin.LogInfo($"Exclude Near Campfires: {ExcludeNearCampfires}");
             EverestPlugin.LogInfo($"Skeleton Draw Distance: {SkeletonDrawDistance}");
             EverestPlugin.LogInfo($"Culling Update Frequency: {CullingUpdateFrequency} seconds");
-            EverestPlugin.LogInfo($"Max Visible Skeletons: {maxVisibleSkeletons.Value}");
+            EverestPlugin.LogInfo($"Max Visible Skeletons: {MaxVisibleSkeletons}");
+            EverestPlugin.LogInfo($"Culling Distance Threshold: {CullingDistanceThreshold}");
             EverestPlugin.LogInfo($"Show Toasts: {ShowToasts}");
             EverestPlugin.LogInfo($"Show Skeleton Nametags: {ShowSkeletonNametags}");
 
