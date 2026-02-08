@@ -82,6 +82,11 @@ namespace Everest.UI
 
         private void LateUpdate()
         {
+            HandleNametagsAsync().Forget();
+        }
+
+        private async UniTaskVoid HandleNametagsAsync()
+        {
             _playerCamera.transform.GetPositionAndRotation(out var camPosition, out var camRotation);
 
             var skeletons = Skeleton.AllActiveSkeletons;
@@ -99,7 +104,11 @@ namespace Everest.UI
             _job.CameraPosition = camPosition;
             _job.CameraForward = camRotation * Vector3.forward;
 
-            _job.ScheduleNative(count, 128).Complete();
+            var jobHandle = _job.ScheduleNative(count, 128);
+
+            await UniTask.Yield(PlayerLoopTiming.PreLateUpdate);
+            if (this.GetCancellationTokenOnDestroy().IsCancellationRequested) return;
+            jobHandle.Complete();
 
             _activeSkeletonsThisFrame.Clear();
 
