@@ -65,11 +65,13 @@ namespace Everest
 
             if (ConfigHandler.ShowToasts) new GameObject("Everest UI Manager").AddComponent<ToastController>();
 
-            await SkeletonManager.LoadComputeShaderAsync();
             await SkeletonManager.LoadSkeletonPrefabAsync();
 
             await AccessoryManager.Initialize();
             await TombstoneHandler.Initialize();
+
+            var mode = NativeInterop.InitializeNativePlugin();
+            LogInfo($"Native Plugin initialized in mode: {mode}");
 
             stopwatch.Stop();
             LogInfo($"Everest Initialized in {stopwatch.ElapsedMilliseconds / 1000f} seconds.");
