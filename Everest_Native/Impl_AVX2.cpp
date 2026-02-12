@@ -55,6 +55,8 @@ void ExecuteCulling_AVX2(CullingJobData* jobData, int begin, int end)
         vIndices = _mm256_add_epi32(vIndices, vEight);
     }
 
+    if (i >= end) return;
+
     float scalarMax = 3.402823466e+38F;
     float scalarSqDist = jobData->squaredDrawDistance;
     float cx = jobData->cameraPosition.x;
