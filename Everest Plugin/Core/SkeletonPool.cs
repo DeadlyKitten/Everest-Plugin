@@ -17,14 +17,36 @@ namespace Everest.Core
             _parentTransform = parentTransform;
 
             _pool = new ObjectPool<Skeleton>(
-                createFunc: () => GameObject.Instantiate(_skeletonPrefab, _parentTransform),
-                actionOnGet: (skeleton) => skeleton.gameObject.SetActive(true),
-                actionOnRelease: (skeleton) => skeleton.gameObject.SetActive(false),
+                createFunc: CreateSkeleton,
+                actionOnGet: (skeleton) => { },
+                actionOnRelease: (skeleton) => skeleton.transform.position = Vector3.down * 1000,
                 actionOnDestroy: (skeleton) => GameObject.Destroy(skeleton.gameObject),
                 collectionCheck: false,
                 defaultCapacity: 10,
                 maxSize: ConfigHandler.MaxVisibleSkeletons
             );
+        }
+
+        public void Prewarm(int count)
+        {
+            var skeletons = new Skeleton[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                skeletons[i] = _pool.Get();
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                _pool.Release(skeletons[i]);
+            }
+        }
+
+        private Skeleton CreateSkeleton()
+        {
+            var skeleton = GameObject.Instantiate(_skeletonPrefab, _parentTransform);
+            skeleton.gameObject.SetActive(true);
+            return skeleton;
         }
 
         public Skeleton Get() => _pool.Get();

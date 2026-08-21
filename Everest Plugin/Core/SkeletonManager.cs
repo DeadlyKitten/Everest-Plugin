@@ -191,40 +191,35 @@ namespace Everest.Core
 
         private void ProcessCullingResults()
         {
-            if (SetEquals(_objectsInRange, _objectsInRangeLastIteration))
-                return;
-
             foreach (var index in _objectsInRangeLastIteration)
             {
-                if (!_objectsInRange.Contains(index) && _skeletons[index].Instance != null)
+                if (!_objectsInRange.Contains(index))
                 {
-                    _skeletonPool.Release(_skeletons[index].Instance);
-                    _skeletons[index].Instance = null;
+                    ref var skeleton = ref _skeletons[index];
+
+                    if (skeleton.Instance != null)
+                    {
+                        _skeletonPool.Release(skeleton.Instance);
+                        skeleton.Instance = null;
+                    }
                 }
             }
 
             foreach (var index in _objectsInRange)
             {
-                if (!_objectsInRangeLastIteration.Contains(index) && _skeletons[index].Instance == null)
+                if (!_objectsInRangeLastIteration.Contains(index))
                 {
-                    _skeletons[index].Instance = _skeletonPool.Get();
-                    PrepareSkeleton(_skeletons[index].Data, _skeletons[index].Instance);
+                    ref var skeleton = ref _skeletons[index];
+
+                    if (skeleton.Instance == null)
+                    {
+                        skeleton.Instance = _skeletonPool.Get();
+                        PrepareSkeleton(skeleton.Data, skeleton.Instance);
+                    }
                 }
             }
 
             (_objectsInRange, _objectsInRangeLastIteration) = (_objectsInRangeLastIteration, _objectsInRange);
-        }
-
-        private bool SetEquals(NativeHashSet<int> a, NativeHashSet<int> b)
-        {
-            if (a.Count != b.Count) return false;
-
-            foreach (var item in a)
-            {
-                if (!b.Contains(item)) return false;
-            }
-
-            return true;
         }
 
         public static async UniTask LoadSkeletonPrefabAsync()
@@ -352,7 +347,11 @@ namespace Everest.Core
             });
         }
 
-        private void PrepareSkeletonPool() => _skeletonPool = new SkeletonPool(_skeletonPrefab, transform);
+        private void PrepareSkeletonPool()
+        {
+            _skeletonPool = new SkeletonPool(_skeletonPrefab, transform);
+            _skeletonPool.Prewarm(ConfigHandler.MaxVisibleSkeletons / 5);
+        }
 
         private struct CullableSkeleton
         {
