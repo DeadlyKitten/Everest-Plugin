@@ -22,21 +22,5 @@ namespace Everest.Jobs
                 batchSize
             );
         }
-
-        public static JobHandle ScheduleNative(this NametagJobNative jobData, int arrayLength, int batchSize, JobHandle dependency = default)
-        {
-            var scheduleParams = new JobScheduleParameters(
-                UnsafeUtility.AddressOf(ref jobData),
-                NametagJobProducer.JobReflectionData,
-                dependency,
-                ScheduleMode.Parallel
-            );
-
-            return ScheduleParallelFor(
-                ref scheduleParams,
-                arrayLength,
-                batchSize
-            );
-        }
     }
 }

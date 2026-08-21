@@ -6,9 +6,13 @@ using UnityEngine;
 
 namespace Everest.UI
 {
-    internal class SkeletonNametag : MonoBehaviour
+    public class SkeletonNametag : MonoBehaviour
     {
         public CanvasGroup CanvasGroup { get; private set; }
+
+        public Skeleton TargetSkeleton;
+        public Vector2 CurrentPosition;
+        public float CurrentScale;
 
         private TextMeshProUGUI _text;
         private string _nickname;
@@ -64,6 +68,17 @@ namespace Everest.UI
                 return $"{elapsed.Minutes}m {elapsed.Seconds}s";
             else
                 return $"{elapsed.Seconds} seconds";
+        }
+
+        public void Toggle(bool enable)
+        {
+            if (enable)
+                enabled = true;
+            else
+            {
+                enabled = false;
+                CanvasGroup.alpha = 0;
+            }
         }
     }
 }

@@ -16,6 +16,9 @@ namespace Everest.UI
     internal class SkeletonUIController : MonoBehaviour
     {
         private Camera _playerCamera;
+        private Transform _playerCameraTransform;
+        private Vector3 _positionLastFrame;
+        private Quaternion _rotationLastFrame;
         private Matrix4x4 _gpuProjectionMatrix;
 
         private float _textVerticalOffset = 0.6f;
@@ -24,9 +27,7 @@ namespace Everest.UI
 
         private ObjectPool<SkeletonNametag> _nametagPool;
 
-        private Dictionary<Skeleton, SkeletonNametag> _activeTextElements = new();
-        HashSet<Skeleton> _activeSkeletonsThisFrame = new();
-        HashSet<Skeleton> _activeSkeletonsLastFrame = new();
+        private List<SkeletonNametag> _activeNametags = new();
 
         private NativeArray<float3> _skeletonPositions;
         private NativeArray<NametagResult> _jobResults;
@@ -38,14 +39,15 @@ namespace Everest.UI
             EverestPlugin.LogInfo("Initializing Skeleton UI Controller...");
 
             _playerCamera = Camera.main;
+            _playerCameraTransform = _playerCamera.transform;
             _gpuProjectionMatrix = GL.GetGPUProjectionMatrix(_playerCamera.projectionMatrix, false);
 
             await PrepareTemplateNametag();
 
             _nametagPool = new(
                 CreateTextObject,
-                obj => obj.gameObject.SetActive(true),
-                obj => obj.gameObject.SetActive(false),
+                obj => obj.Toggle(true),
+                obj => obj.Toggle(false),
                 obj => Destroy(obj),
                 false,
                 5, 20
@@ -82,83 +84,89 @@ namespace Everest.UI
 
         private void LateUpdate()
         {
-            HandleNametagsAsync().Forget();
-        }
+            _playerCameraTransform.GetPositionAndRotation(out var camPosition, out var camRotation);
 
-        private async UniTaskVoid HandleNametagsAsync()
-        {
-            _playerCamera.transform.GetPositionAndRotation(out var camPosition, out var camRotation);
+            if (camPosition == _positionLastFrame && camRotation == _rotationLastFrame) return;
 
-            var skeletons = Skeleton.AllActiveSkeletons;
-            var count = skeletons.Count;
+            _positionLastFrame = camPosition;
+            _rotationLastFrame = camRotation;
+
+            var count = Skeleton.Count;
+
+            if (count == 0) return;
 
             var viewProjectionMatrix = _gpuProjectionMatrix * _playerCamera.worldToCameraMatrix;
-
-            for (int i = 0; i < count; i++)
-            {
-                var position = skeletons[i].HeadBone.position;
-                _skeletonPositions[i] = position;
-            }
 
             _job.ViewProjectionMatrix = viewProjectionMatrix;
             _job.CameraPosition = camPosition;
             _job.CameraForward = camRotation * Vector3.forward;
 
-            var jobHandle = _job.ScheduleNative(count, 128);
-
-            await UniTask.Yield(PlayerLoopTiming.PreLateUpdate);
-            if (destroyCancellationToken.IsCancellationRequested) return;
-            jobHandle.Complete();
-
-            _activeSkeletonsThisFrame.Clear();
-
-            for (int i = 0; i < count; i++)
+            unsafe
             {
-                var result = _jobResults[i];
+                var jobPointer = UnsafeUtility.AddressOf(ref _job);
+                NativeInterop.ExecuteNametagJob(jobPointer, 0, count);
 
-                if (result.IsVisible == 0) continue;
+                var resultsPtr = (NametagResult*)NativeArrayUnsafeUtility.GetUnsafePtr(_jobResults);
 
-                var skeleton = skeletons[i];
-                _activeSkeletonsThisFrame.Add(skeleton);
-
-                if (!_activeTextElements.TryGetValue(skeleton, out var nametag))
+                for (int i = 0; i < count; i++)
                 {
-                    nametag = _nametagPool.Get();
-                    _activeTextElements[skeleton] = nametag;
-                    nametag.Initialize(skeleton.Nickname, skeleton.Timestamp);
-                }
+                    var result = resultsPtr[i];
 
-                nametag.CanvasGroup.alpha = result.Alpha;
-                nametag.transform.position = new Vector3(result.ScreenX, result.ScreenY, 0);
-                nametag.transform.localScale = new Vector3(result.Scale, result.Scale, 1f);
+                    if (result.IsVisible == 0) continue;
+
+                    var skeleton = Skeleton.AllActiveSkeletons[i];
+                    skeleton.LastRenderedFrame = Time.frameCount;
+
+                    if (skeleton.ActiveNametag == null)
+                    {
+                        skeleton.ActiveNametag = _nametagPool.Get();
+                        skeleton.ActiveNametag.Initialize(skeleton.Nickname, skeleton.Timestamp);
+
+                        skeleton.ActiveNametag.TargetSkeleton = skeleton;
+                        _activeNametags.Add(skeleton.ActiveNametag);
+                    }
+
+                    skeleton.ActiveNametag.CanvasGroup.alpha = result.Alpha;
+
+                    if (result.Alpha <= 0.01f) continue;
+
+                    var newPosition = new Vector2(result.ScreenX, result.ScreenY);
+
+                    if ((skeleton.ActiveNametag.CurrentPosition - newPosition).sqrMagnitude > 0.01f)
+                    {
+                        skeleton.ActiveNametag.CurrentPosition = newPosition;
+                        skeleton.ActiveNametag.transform.position = newPosition;
+                    }
+
+                    if (Mathf.Abs(skeleton.ActiveNametag.CurrentScale - result.Scale) > 0.01f)
+                    {
+                        skeleton.ActiveNametag.CurrentScale = result.Scale;
+                        skeleton.ActiveNametag.transform.localScale = Vector3.one * result.Scale;
+                    }
+                }
             }
 
-            CleanupPool(_activeTextElements, _nametagPool);
+            CleanupPool();
         }
 
-        private void CleanupPool(Dictionary<Skeleton, SkeletonNametag> activeElements, ObjectPool<SkeletonNametag> pool)
+        private void CleanupPool()
         {
-            if (_activeSkeletonsThisFrame.SetEquals(_activeSkeletonsLastFrame))
-                return;
-
-            var toRemove = new List<Skeleton>();
-
-            foreach (var pair in activeElements)
+            for (int i = _activeNametags.Count - 1; i >= 0; i--)
             {
-                if (!_activeSkeletonsThisFrame.Contains(pair.Key))
+                var nametag = _activeNametags[i];
+
+                if (nametag.TargetSkeleton == null || nametag.TargetSkeleton.LastRenderedFrame != Time.frameCount)
                 {
-                    pool.Release(pair.Value);
-                    toRemove.Add(pair.Key);
+                    if (nametag.TargetSkeleton != null)
+                        nametag.TargetSkeleton.ActiveNametag = null;
+
+                    _nametagPool.Release(nametag);
+
+                    var lastIndex = _activeNametags.Count - 1;
+                    _activeNametags[i] = _activeNametags[lastIndex];
+                    _activeNametags.RemoveAt(lastIndex);
                 }
             }
-
-            foreach (var skeleton in toRemove)
-            {
-                activeElements.Remove(skeleton);
-            }
-
-            _activeSkeletonsLastFrame.Clear();
-            _activeSkeletonsLastFrame.UnionWith(_activeSkeletonsThisFrame);
         }
 
         private async UniTask PrepareTemplateNametag()
@@ -191,6 +199,11 @@ namespace Everest.UI
             templateObject.SetActive(false);
         }
 
-        private SkeletonNametag CreateTextObject() => Instantiate(_nametagTemplate, transform);
+        private SkeletonNametag CreateTextObject()
+        {
+            var nametag = Instantiate(_nametagTemplate, transform);
+            nametag.gameObject.SetActive(true);
+            return nametag;
+        }
     }
 }

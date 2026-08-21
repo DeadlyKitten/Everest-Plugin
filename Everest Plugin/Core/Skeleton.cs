@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Everest.Accessories;
 using Everest.Api;
+using Everest.UI;
 using Everest.Utilities;
 using Unity.Collections;
 using UnityEngine;
@@ -12,12 +13,21 @@ namespace Everest.Core
 {
     public class Skeleton : MonoBehaviour
     {
-        public static List<Skeleton> AllActiveSkeletons { get; private set; } = new List<Skeleton>();
+        public static int Count;
+        public static Skeleton[] AllActiveSkeletons { get; private set; } = new Skeleton[100];
+
+        public static event Action<Skeleton> OnSkeletonSpawned;
+        public static event Action<Skeleton> OnSkeletonDespawned;
 
         public Transform HeadBone => Bones[(int)SkeletonBodypart.Head];
+        public Vector3 HeadBonePosition = Vector3.zero;
         public string Nickname { get; private set; }
         public DateTime Timestamp { get; private set; }
         public Transform[] Bones { get; private set; }
+
+        public int ArrayIndex;
+        public SkeletonNametag ActiveNametag;
+        public int LastRenderedFrame;
 
         private List<SkeletonAccessory> _accessories = new List<SkeletonAccessory>();
 
@@ -29,12 +39,24 @@ namespace Everest.Core
                 .ToArray();
         }
 
-        private void OnEnable() => AllActiveSkeletons.Add(this);
+        private void OnEnable()
+        {
+            ArrayIndex = Count;
+            AllActiveSkeletons[Count] = this;
+            Count++;
+        }
 
         private void OnDisable()
         {
             RemoveAccessories();
-            AllActiveSkeletons.Remove(this);
+            Count--;
+            var lastIndex = Count;
+            var lastSkeleton = AllActiveSkeletons[lastIndex];
+
+            lastSkeleton.ArrayIndex = ArrayIndex;
+            AllActiveSkeletons[ArrayIndex] = lastSkeleton;
+
+            OnSkeletonDespawned?.Invoke(this);
         }
 
         public void Initialize(SkeletonData data)
@@ -52,6 +74,9 @@ namespace Everest.Core
             }
 
             transform.SetPositionAndRotation(data.global_position, Quaternion.Euler(data.global_rotation));
+
+            HeadBonePosition = HeadBone.position;
+            OnSkeletonSpawned?.Invoke(this);
         }
 
         private void TryAddAccessory(string steamId)
