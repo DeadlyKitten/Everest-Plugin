@@ -75,7 +75,7 @@ void ExecuteCulling_AVX2(CullingJobData* jobData, int begin, int end)
     }
 }
 
-void ExecuteNametag_AVX2(NametagJobData* jobData, int begin, int end)
+void ExecuteNametag_AVX2(NametagJobData* jobData, int count)
 {
-    ExecuteNametag_Kernel(jobData, begin, end);
+    ExecuteNametag_Kernel(jobData, count);
 }

@@ -61,6 +61,6 @@ void ExecuteCulling_AVX2(CullingJobData* jobData, int begin, int end);
 void ExecuteCulling_SSE4(CullingJobData* jobData, int begin, int end);
 void ExecuteCulling_Generic(CullingJobData* jobData, int begin, int end);
 
-void ExecuteNametag_AVX2(NametagJobData* jobData, int begin, int end);
-void ExecuteNametag_SSE4(NametagJobData* jobData, int begin, int end);
-void ExecuteNametag_Generic(NametagJobData* jobData, int begin, int end);
+void ExecuteNametag_AVX2(NametagJobData* jobData, int count);
+void ExecuteNametag_SSE4(NametagJobData* jobData, int count);
+void ExecuteNametag_Generic(NametagJobData* jobData, int count);

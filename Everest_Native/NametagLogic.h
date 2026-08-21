@@ -3,7 +3,7 @@
 #include "SharedTypes.h"
 #include <algorithm>
 
-static __forceinline void ExecuteNametag_Kernel(NametagJobData* jobData, int begin, int end)
+static __forceinline void ExecuteNametag_Kernel(NametagJobData* jobData, int count)
 {
     const float3* __restrict skeletons = jobData->skeletons;
     NametagResult* __restrict results = jobData->results;
@@ -18,7 +18,7 @@ static __forceinline void ExecuteNametag_Kernel(NametagJobData* jobData, int beg
 
     const float* projectionMatrix = jobData->viewProjectionMatrix.matrix;
 
-    for (int i = begin; i < end; ++i)
+    for (int i = 0; i < count; ++i)
     {
         results[i].isVisible = 1;
 

@@ -107,7 +107,7 @@ namespace Everest.UI
             unsafe
             {
                 var jobPointer = UnsafeUtility.AddressOf(ref _job);
-                NativeInterop.ExecuteNametagJob(jobPointer, 0, count);
+                NativeInterop.ExecuteNametagJob(jobPointer, count);
 
                 var resultsPtr = (NametagResult*)NativeArrayUnsafeUtility.GetUnsafePtr(_jobResults);
 

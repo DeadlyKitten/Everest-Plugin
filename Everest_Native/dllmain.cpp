@@ -4,7 +4,7 @@
 typedef void (*CullingFunc)(CullingJobData*, int, int);
 static CullingFunc ActiveCullingFunc = ExecuteCulling_Generic;
 
-typedef void (*NametagFunc)(NametagJobData*, int, int);
+typedef void (*NametagFunc)(NametagJobData*, int);
 static NametagFunc ActiveNametagFunc = ExecuteNametag_Generic;
 
 extern "C" __declspec(dllexport)
@@ -37,8 +37,8 @@ void ExecuteCullingJob(void* rawData, int begin, int end)
 }
 
 extern "C" __declspec(dllexport)
-void ExecuteNametagJob(void* rawData, int begin, int end)
+void ExecuteNametagJob(void* rawData, int count)
 {
     NametagJobData* jobData = static_cast<NametagJobData*>(rawData);
-    ActiveNametagFunc(jobData, begin, end);
+    ActiveNametagFunc(jobData, count);
 }

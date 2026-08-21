@@ -13,6 +13,6 @@ namespace Everest.Utilities
         internal static extern void ExecuteCullingJob(void* data, int begin, int end);
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern void ExecuteNametagJob(void* data, int begin, int end);
+        internal static extern void ExecuteNametagJob(void* data, int count);
     }
 }
