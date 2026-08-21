@@ -20,18 +20,12 @@ namespace Everest.UI
         private Vector3 _positionLastFrame;
         private Quaternion _rotationLastFrame;
         private Matrix4x4 _gpuProjectionMatrix;
-
         private float _textVerticalOffset = 0.6f;
-
         private SkeletonNametag _nametagTemplate;
-
         private ObjectPool<SkeletonNametag> _nametagPool;
-
         private List<SkeletonNametag> _activeNametags = new();
-
         private NativeArray<float3> _skeletonPositions;
         private NativeArray<NametagResult> _jobResults;
-
         private NametagJobNative _job;
 
         private async UniTaskVoid Awake()
@@ -76,8 +70,17 @@ namespace Everest.UI
             EverestPlugin.LogInfo("Skeleton UI Controller Initialized!");
         }
 
+        private void Start()
+        {
+            Skeleton.OnSkeletonSpawned += OnSkeletonSpawned;
+            Skeleton.OnSkeletonDespawned += OnSkeletonDespawned;
+        }
+
         private void OnDestroy()
         {
+            Skeleton.OnSkeletonSpawned -= OnSkeletonSpawned;
+            Skeleton.OnSkeletonDespawned -= OnSkeletonDespawned;
+
             _skeletonPositions.Dispose();
             _jobResults.Dispose();
         }
@@ -149,6 +152,17 @@ namespace Everest.UI
             CleanupPool();
         }
 
+        private void OnSkeletonSpawned(Skeleton newSkeleton)
+        {
+            _skeletonPositions[newSkeleton.ArrayIndex] = newSkeleton.HeadBonePosition;
+        }
+
+        private void OnSkeletonDespawned(Skeleton oldSkeleton)
+        {
+            var lastIndex = Skeleton.Count;
+            _skeletonPositions[oldSkeleton.ArrayIndex] = _skeletonPositions[lastIndex];
+        }
+
         private void CleanupPool()
         {
             for (int i = _activeNametags.Count - 1; i >= 0; i--)
@@ -196,13 +210,13 @@ namespace Everest.UI
 
             _nametagTemplate = templateObject.AddComponent<SkeletonNametag>();
 
-            templateObject.SetActive(false);
+            _nametagTemplate.Toggle(false);
         }
 
         private SkeletonNametag CreateTextObject()
         {
             var nametag = Instantiate(_nametagTemplate, transform);
-            nametag.gameObject.SetActive(true);
+            nametag.Toggle(true);
             return nametag;
         }
     }
