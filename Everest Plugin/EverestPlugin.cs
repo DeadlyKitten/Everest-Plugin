@@ -51,7 +51,7 @@ namespace Everest
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
-                Converters = new List<JsonConverter> { new Vector3Converter() },
+                Converters = new List<JsonConverter> { new Vector3Converter(), new QuaternionConverter() },
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             };
 
