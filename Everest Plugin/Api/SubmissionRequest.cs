@@ -22,11 +22,9 @@ namespace Everest.Api
         public bool IsNearCampfire { get; set; }
 
         [JsonProperty("global_position")]
-        [JsonConverter(typeof(Vector3Converter))]
         public Vector3 GlobalPosition { get; set; }
 
         [JsonProperty("global_rotation")]
-        [JsonConverter(typeof(Vector3Converter))]
         public Vector3 GlobalRotation { get; set; }
 
         [JsonProperty("bone_local_positions")]
