@@ -14,7 +14,7 @@ namespace Everest.Core
     public class Skeleton : MonoBehaviour
     {
         public static int Count;
-        public static Skeleton[] AllActiveSkeletons { get; private set; } = new Skeleton[100];
+        public static Skeleton[] AllActiveSkeletons { get; private set; } = new Skeleton[ConfigHandler.MaxVisibleSkeletons];
 
         public static event Action<Skeleton> OnSkeletonSpawned;
         public static event Action<Skeleton> OnSkeletonDespawned;
