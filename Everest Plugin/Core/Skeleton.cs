@@ -41,14 +41,14 @@ namespace Everest.Core
         {
             Nickname = data.nickname;
             gameObject.name = Nickname;
-            Timestamp = DateTime.Parse(data.timestamp);
+            Timestamp = data.timestamp;
             TryAddAccessory(data.steam_id);
 
             for (var i = 0; i < Bones.Length; i++)
             {
                 Bones[i].SetLocalPositionAndRotation(
                     data.bone_local_positions[i],
-                    Quaternion.Euler(data.bone_local_rotations[i]));
+                    data.bone_local_rotations[i]);
             }
 
             transform.SetPositionAndRotation(data.global_position, Quaternion.Euler(data.global_rotation));

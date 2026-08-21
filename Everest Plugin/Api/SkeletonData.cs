@@ -1,5 +1,4 @@
-﻿using Everest.Utilities;
-using Newtonsoft.Json;
+﻿using System;
 using UnityEngine;
 
 namespace Everest.Api
@@ -10,16 +9,10 @@ namespace Everest.Api
         public string nickname;
         public int map_id;
         public int map_segment;
-
-        [JsonConverter(typeof(Vector3Converter))]
         public Vector3 global_position;
-
-        [JsonConverter(typeof(Vector3Converter))]
         public Vector3 global_rotation;
-
         public Vector3[] bone_local_positions;
-        public Vector3[] bone_local_rotations;
-
-        public string timestamp;
+        public Quaternion[] bone_local_rotations;
+        public DateTime timestamp;
     }
 }
